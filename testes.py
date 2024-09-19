@@ -9,19 +9,7 @@ file_path2 = r'C:\Users\albpe\OneDrive - Universidade da Coruña\Escritorio\fDSC
 
 ax1=plt.gca()
 ax2=plt.gca()
-'''
-df = pd.DataFrame({'T':np.linspace(1, 10, 10), 'c1':np.linspace(10, 80, 10), 'c2':np.logspace(1, 2, 10)})
 
-#df.plot(x='T', y='c2', ax=ax1)
-#df.plot(x='T', y='c1', ax=ax1)
-
-while any(df['c1']-df['c2'] - extra < 0) == True:
-    print('spacing curve...')
-    df['c1'] += 3
-
-
-df.plot(x='T', y='c1', ax=ax2)
-'''
 tx.modify_text_file(file_path1)
 tx.modify_text_file(file_path2)
 
@@ -32,7 +20,7 @@ margin = data1['Heat Flow'].max() * .1
 
 while any(data2['Heat Flow'] - data1['Heat Flow'] - margin < 0) == True:
     print('spacing curve...')
-    data2 += data1['Heat Flow'].max()*.5
+    data2 += margin
 
 data1.plot(x = 'Ts', y = 'Heat Flow', ax=ax1)
 data2.plot(x = 'Ts', y = 'Heat Flow', ax=ax2)
