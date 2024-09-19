@@ -19,8 +19,3 @@ def modify_text_file(file_path):
         file.writelines(modified_lines)
     
     print(f"Modified {file_path}.")
-
-# Example usage
-file_path = r'C:\Users\albpe\OneDrive - Universidade da Coruña\Escritorio\fDSC\90816 (Bulk 80kDa)\Annealing30min2kto260\Segment138_180deg.txt'
-num_lines_to_delete = 2  # Number of lines you want to delete from the end
-modify_text_file(file_path)
