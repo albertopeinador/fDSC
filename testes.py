@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import txtmod as tx
+import filehandler as tx
 
 
 file_path1 = r'C:\Users\albpe\OneDrive - Universidade da Coruña\Escritorio\fDSC\90816 (Bulk 80kDa)\Annealing30min2kto260\Segment108_120deg.txt'
