@@ -27,7 +27,6 @@ def files_to_dict(main_dir):
     temps = {}
     for i in os.listdir(main_dir):
         match = re.search(r'_(minus)?(\d+)\s*(degree|deg)(_ref)?', i)
-        #print (match)
         if match:
             number_str = match.group(2)
             number = int(number_str)
@@ -40,19 +39,4 @@ def files_to_dict(main_dir):
             else:
                 # Otherwise, place it in the first slot (index 0)
                 temps[number][0] = i
-    '''
-    for i in os.listdir(main_dir):
-        match = re.search(r'_(minus )?(\d+)\s*(degree|deg)(_ref)?', i)
-        if match:
-            number_str = match.group(2)
-            number = int(number_str)
-            if match.group(1):
-                number = -number
-            if number not in temps:
-                temps[number] = [None, None]
-            if match.group(3):
-                temps[number][1] = i
-            else:
-                # Otherwise, place it in the first slot (index 0)
-                temps[number][0] = i'''
     return temps
