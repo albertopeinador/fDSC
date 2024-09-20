@@ -29,8 +29,10 @@ def files_to_dict(main_dir):
     temps_files = {}
     temps = []
     for i in os.listdir(main_dir):
-        match = re.search(r'_(minus)?(\d+)\s*(degree|deg)(_ref)?', i)
+        match = re.search(r'_(minus)?(\d+)\s*(degree|deg)(_ref)?(_modified)?', i)
         if match:
+            if match.group(5):
+                continue
             number_str = match.group(2)
             number = int(number_str)
             if match.group(1):
@@ -45,6 +47,7 @@ def files_to_dict(main_dir):
                 temps_files[number][0] = i
     return temps, temps_files
 
+'''
 def load_files(main_dir, temps, temp_dict, cutoff):
     big_data = []
     for i in temps:
@@ -52,7 +55,8 @@ def load_files(main_dir, temps, temp_dict, cutoff):
         abs_path_ref = os.path.join(str(os.getcwd()) , main_dir , temp_dict[i][1])
         modify_text_file(abs_path, cutoff)
         modify_text_file(abs_path_ref, cutoff)
-        df = pd.read_csv(abs_path, sep = '\t', encoding = 'latin1', index_col='Index')
-        df_ref = pd.read_csv(abs_path_ref, sep = '\t', encoding = 'latin1', index_col='Index')
+        df = pd.read_csv(abs_path, sep = '\t', encoding = 'latin1')
+        df_ref = pd.read_csv(abs_path_ref, sep = '\t', encoding = 'latin1')
         big_data.append((df, df_ref))
     return big_data
+    '''
