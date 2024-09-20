@@ -45,13 +45,13 @@ def files_to_dict(main_dir):
                 temps_files[number][0] = i
     return temps, temps_files
 
-def load_files(main_dir, temps, temp_dict):
+def load_files(main_dir, temps, temp_dict, cutoff):
     big_data = []
     for i in temps:
         abs_path = os.path.join(str(os.getcwd()), main_dir, temp_dict[i][0])
         abs_path_ref = os.path.join(str(os.getcwd()) , main_dir , temp_dict[i][1])
-        modify_text_file(abs_path, 75)
-        modify_text_file(abs_path_ref, 75)
+        modify_text_file(abs_path, cutoff)
+        modify_text_file(abs_path_ref, cutoff)
         df = pd.read_csv(abs_path, sep = '\t', encoding = 'latin1', index_col='Index')
         df_ref = pd.read_csv(abs_path_ref, sep = '\t', encoding = 'latin1', index_col='Index')
         big_data.append((df, df_ref))
