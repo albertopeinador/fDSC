@@ -3,13 +3,13 @@ import os
 import bisect as bi
 import pandas as pd
 
-def modify_text_file(file_path):
+def modify_text_file(file_path, start_cutoff):
     # Step 1: Read the entire file
     with open(file_path, 'r') as file:
         lines = file.readlines()
     
     # Step 2: Remove the last couple of lines
-    lines = lines [0:1] + lines[2:]
+    lines = lines [0:1] + lines[start_cutoff:]
 
     if lines[-1][0].isalpha():
         lines = lines[:-1]
@@ -22,7 +22,7 @@ def modify_text_file(file_path):
     with open(file_path.replace('.txt', '_modified.txt'), 'w') as file:
         file.writelines(modified_lines)
     
-    print(f"Modified {file_path}.")
+    #print(f"Modified {file_path}.")
 
 
 def files_to_dict(main_dir):
@@ -48,10 +48,11 @@ def files_to_dict(main_dir):
 def load_files(main_dir, temps, temp_dict):
     big_data = []
     for i in temps:
-        modify_text_file(main_dir + temp_dict[i][0])
-        modify_text_file(main_dir + temp_dict[i][1])
-        df = pd.read_csv(main_dir + temp_dict[i][0], sep = '\t', encoding = 'latin1')
-        df_ref = pd.read_csv(main_dir + temp_dict[i][1], sep = '\t', encoding = 'latin1')
+        abs_path = os.path.join(str(os.getcwd()), main_dir, temp_dict[i][0])
+        abs_path_ref = os.path.join(str(os.getcwd()) , main_dir , temp_dict[i][1])
+        modify_text_file(abs_path, 75)
+        modify_text_file(abs_path_ref, 75)
+        df = pd.read_csv(abs_path, sep = '\t', encoding = 'latin1', index_col='Index')
+        df_ref = pd.read_csv(abs_path_ref, sep = '\t', encoding = 'latin1', index_col='Index')
         big_data.append((df, df_ref))
     return big_data
-
