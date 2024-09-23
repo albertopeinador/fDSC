@@ -9,7 +9,7 @@ def modify_text_file(file_path, start_cutoff):
         lines = file.readlines()
     
     # Step 2: Remove the last couple of lines
-    lines = lines [0:1] + lines[start_cutoff:]
+    lines = lines [:1] + lines[start_cutoff:]
 
     if lines[-1][0].isalpha():
         lines = lines[:-1]
