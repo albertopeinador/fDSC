@@ -12,15 +12,15 @@ def update_slider_value():
 
 
 fig, ax1= plt.subplots(1, 1, sharex=False, sharey=True)
-fig.set_figheight(10, 40)
+fig.set_figheight(16)
 
 ctr_panel, graf = st.columns(2)
 
 with ctr_panel:
-    folder_name = st.text_input('Folder path', key = 'direc')
+    folder_name = st.text_input('Folder name', key = 'direc')
     load_cutoff = st.slider('cutoff', min_value=2, max_value=100)
     margin_step = st.slider('margin_step', min_value=0, max_value=100) / 100
-    eje_x = st.selectbox('Eje x', ['Tr', 'Ts', 't'])
+    eje_x = st.selectbox('x axis', ['Tr', 'Ts', 't'])
 
 try:
     
