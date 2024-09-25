@@ -6,15 +6,15 @@ def find_int_region(df_tuple, thold, y_name):
     max_diff_index = dif.idxmax()
     left_index = max_diff_index
     right_index = max_diff_index
-    while left_index > 0 and dif.iloc[left_index] > thold:
+    while left_index > 0 and dif.loc[left_index] > thold:
         left_index -= 1
 
-    while right_index < len(dif) - 1 and dif.iloc[right_index] > thold:
+    while right_index < len(dif) - 1 and dif.loc[right_index] > thold:
         right_index += 1
 
-    int_data = df_tuple[0][y_name].iloc[left_index:right_index + 1] - df_tuple[1][y_name].iloc[left_index:right_index + 1]
+    int_data = df_tuple[0][y_name].loc[left_index:right_index + 1] - df_tuple[1][y_name].loc[left_index:right_index + 1]
     int_data.to_frame()
-    int_data['t'] =  df_tuple[0]['t'].iloc[left_index:right_index + 1]
+    int_data['t'] =  df_tuple[0]['t'].loc[left_index:right_index + 1]
     return int_data, left_index, right_index
 
 def integ(df, y_name, x_name):

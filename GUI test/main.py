@@ -36,6 +36,7 @@ try:
             st.session_state[i] = 0.
 
     big_data = ld.load_files(folder_name, temps, file_dict, load_cutoff)
+    
     margin = margin_step * (float(big_data[0][1]['Heat Flow'].max()) - float(big_data[0][1]['Heat Flow'].min()))
 
     int_regs = {}
