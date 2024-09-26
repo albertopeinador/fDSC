@@ -1,5 +1,5 @@
 import numpy as np
-
+import streamlit as st
 
 def find_int_region(df_tuple, thold, y_name):
     dif = df_tuple[0][y_name] - df_tuple[1][y_name]
@@ -13,7 +13,8 @@ def find_int_region(df_tuple, thold, y_name):
         right_index += 1
 
     int_data = df_tuple[0][y_name].loc[left_index:right_index + 1] - df_tuple[1][y_name].loc[left_index:right_index + 1]
-    int_data.to_frame()
+
+    int_data = int_data.to_frame()
     int_data['t'] =  df_tuple[0]['t'].loc[left_index:right_index + 1]
     return int_data, left_index, right_index
 

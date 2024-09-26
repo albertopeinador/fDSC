@@ -1,11 +1,11 @@
 import re
 import os
 import bisect as bi
-import pandas as pd
+#import pandas as pd
 
 def modify_text_file(file_path, start_cutoff):
     # Step 1: Read the entire file
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='latin1') as file:
         lines = file.readlines()
     
     # Step 2: Remove the last couple of lines

@@ -9,7 +9,7 @@ def load_files(main_dir, temps, temp_dict, cutoff):
         abs_path_ref = os.path.join(str(os.getcwd()) , main_dir , temp_dict[i][1])
         tx.modify_text_file(abs_path, cutoff)
         tx.modify_text_file(abs_path_ref, cutoff)
-        df = pd.read_csv(abs_path.replace('.txt', '_modified.txt'), sep = '\t', encoding = 'latin1', index_col= 'Index')
-        df_ref = pd.read_csv(abs_path_ref.replace('.txt', '_modified.txt'), sep = '\t', encoding = 'latin1', index_col= 'Index')
+        df = pd.read_csv(abs_path.replace('.txt', '_modified.txt'), sep = '\t', encoding = 'unicode_escape', index_col= 'Index')
+        df_ref = pd.read_csv(abs_path_ref.replace('.txt', '_modified.txt'), sep = '\t', encoding = 'unicode_escape', index_col= 'Index')
         big_data.append((df, df_ref))
     return big_data
