@@ -5,7 +5,7 @@ import filehandler as tx
 import file_loader as ld
 import find_and_int as fai
 import numpy as np
-
+import scipy.integrate as sc
 st.set_page_config(layout="wide")
 
 st.markdown("""
@@ -99,7 +99,7 @@ try:
         if regs_label not in st.session_state:
             st.session_state[regs_label] = [big_data[i][0][eje_x].iloc[left],big_data[i][0][eje_x].iloc[right]]
         indices = big_data[i][0][eje_x][(big_data[i][0][eje_x] >= st.session_state[regs_label][0]) & (big_data[i][0][eje_x] <= st.session_state[regs_label][1])].index
-        ints.append(np.trapz(big_data[i][0]['Heat Flow'][indices.min():indices.max()]-big_data[i][1]['Heat Flow'][indices.min():indices.max()], big_data[i][0]['t'][indices.min():indices.max()]))
+        ints.append(sc.trapezoid(big_data[i][0]['Heat Flow'][indices.min():indices.max()]-big_data[i][1]['Heat Flow'][indices.min():indices.max()], big_data[i][0]['t'][indices.min():indices.max()]))
     ax2.plot(temps, ints, 'ks')
 
     if mod:
