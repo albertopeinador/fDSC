@@ -12,11 +12,11 @@ def find_int_region(df_tuple, thold, y_name):
     while right_index < len(dif) - 1 and dif.iloc[right_index] > thold:
         right_index += 1
 
-    int_data = df_tuple[0][y_name].iloc[left_index:right_index + 1] - df_tuple[1][y_name].iloc[left_index:right_index + 1]
+    #int_data = df_tuple[0][y_name].iloc[left_index:right_index + 1] - df_tuple[1][y_name].iloc[left_index:right_index + 1]
 
-    int_data = int_data.to_frame()
-    int_data['t'] =  df_tuple[0]['t'].iloc[left_index:right_index + 1]
-    return int_data, left_index, right_index
+    #int_data = int_data.to_frame()
+    #int_data['t'] =  df_tuple[0]['t'].iloc[left_index:right_index + 1]
+    return left_index, right_index
 
 def integ(df, y_name, x_name):
     integral = np.trapz(df[y_name], df[x_name])
