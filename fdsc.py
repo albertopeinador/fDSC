@@ -36,6 +36,7 @@ if "dif_delta" not in st.session_state:
     st.session_state["dif_delta"] = 0.0
 
 
+
 #   Define slider updaters for the session_state sliders
 
 
@@ -146,20 +147,23 @@ try:
                 step=0.01,
                 on_change=update_slider_value,
             )
-            scale, delta = st.columns([0.3, 0.7])
-            with scale:
-                dif_scale = st.text_input("difference scale", value="1")
-            with delta:
-                dif_delta = st.slider(
-                    "dif delta",
-                    max_value=1.0,
-                    min_value=0.0,
-                    value=st.session_state["dif_delta"],
-                    key="dif_delta_key",
-                    on_change=update_dif_delta,
-                )
-
+            
             show_dif = st.checkbox("Show dif")
+
+            scale, delta = st.columns([0.3, 0.7])
+            if show_dif:
+                with scale:
+                    dif_scale = st.text_input("difference scale", value="1")
+                with delta:
+                    dif_delta = st.slider(
+                        "dif delta",
+                        max_value=1.0,
+                        min_value=0.0,
+                        value=st.session_state["dif_delta"],
+                        key="dif_delta_key",
+                        on_change=update_dif_delta,
+                    )
+
     #   INTEGRATION LOOP
     for i in range(len(temps)):
         #   Apply delta modification to all curves
@@ -167,9 +171,13 @@ try:
             0
         ]["Heat Flow"].max()
 
+        if 'x_change_check'+str(temps[i]) not in st.session_state:
+            st.session_state['x_change_check'+str(temps[i])] = 'easteregg'
+
+
         #   Initialize session_state with the auto-generated limits
         regs_label = "regs_" + str(temps[i])
-        if regs_label not in st.session_state:
+        if regs_label not in st.session_state or st.session_state['x_change_check'+str(temps[i])] != eje_x:
             #   Find auto-limits for integration
             left, right = fai.find_int_region(
                 big_data[i],
@@ -182,6 +190,7 @@ try:
                 big_data[i][0][eje_x].iloc[left],
                 big_data[i][0][eje_x].iloc[right],
             ]
+            st.session_state['x_change_check'] = eje_x
 
         #   Find indices of integration limit in the DataFrame
         indices = big_data[i][0][eje_x][
