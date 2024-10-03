@@ -27,10 +27,13 @@ st.markdown(
 )
 
 
-#   Initialize slider_delta session state
+#   Initialize session states
 
 if "slider_delta" not in st.session_state:
     st.session_state["slider_delta"] = 0.0
+
+if 'dif_delta' not in st.session_state:
+    st.session_state['dif_delta'] = 0.
 
 
 #   Define slider updaters for the session_state sliders
@@ -58,6 +61,9 @@ def update_ref():
 
 def update_shade():
     st.session_state["shade"] = st.session_state["shade_color"]
+
+def update_dif_delta():
+    st.session_state['dif_delta'] = st.session_state['dif_delta_key']
 
 
 #   Initialize session_state colors
@@ -92,7 +98,8 @@ with ctr_panel:
     load_cutoff = st.slider("cutoff", min_value=2, max_value=100, value=75)
     margin_step = st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
     eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
-    int_dif_th = st.slider("integral threshold", min_value=0, max_value=100) / 1000
+    int_dif_th = 0.
+    #int_dif_th = st.slider("integral threshold", min_value=0, max_value=100) / 1000
 
 #   Everything in a try to avoid errors from no files in first run
 
@@ -117,7 +124,7 @@ try:
 
     #   Create MODIFY mode checkbox
     with ctr_panel:
-        mod = st.checkbox("Modify overlap")
+        mod = st.checkbox("MODIFY")
 
     if mod:
         #   Clear the axis in case they contain anything from previous runs
@@ -138,7 +145,19 @@ try:
                 step=0.01,
                 on_change=update_slider_value,
             )
+            scale, delta = st.columns([.3, .7])
+            with scale:               
+                dif_scale = st.text_input('difference scale', value = '1')
+            with delta:
+                dif_delta = st.slider('dif delta',
+                                      max_value = 1.,
+                                      min_value=0.,
+                                      value = st.session_state['dif_delta'],
+                                      key = 'dif_delta_key',
+                                      on_change=update_dif_delta
+                                      )
 
+            show_dif = st.checkbox('Show dif')
     #   INTEGRATION LOOP
     for i in range(len(temps)):
         #   Apply delta modification to all curves
@@ -172,7 +191,7 @@ try:
         #   Try to calculate integral, sometimes it wont work because auto-limits are a bit finicky
         try:
             ints.append(
-                np.trapz(
+                np.trapezoid(
                     big_data[i][0]["Heat Flow"][indices.min() : indices.max()]
                     - big_data[i][1]["Heat Flow"][indices.min() : indices.max()],
                     big_data[i][0]["t"][indices.min() : indices.max()],
@@ -235,14 +254,15 @@ try:
         ax1.axvline(x=st.session_state["regs_" + str(Ta)][1], color="r", linestyle="--")
 
         #   Plot difference
-        if len(big_data[temps.index(Ta)][0][eje_x]) == len(dif):
-            ax1.plot(
-                big_data[temps.index(Ta)][0][eje_x], dif, "r"
-            )  # [lims[Ta][0]:lims[Ta][1]+2]
-        else:
-            ax1.plot(
-                big_data[temps.index(Ta)][1][eje_x], dif, "r"
-            )  # [lims[Ta][0]:lims[Ta][1]+2]
+        if show_dif:
+            if len(big_data[temps.index(Ta)][0][eje_x]) == len(dif):
+                ax1.plot(
+                    big_data[temps.index(Ta)][0][eje_x], float(dif_scale) * dif + dif_delta *  np.abs(big_data[temps.index(Ta)][0]['Heat Flow'].min()), "r"
+                )  # [lims[Ta][0]:lims[Ta][1]+2]
+            else:
+                ax1.plot(
+                    big_data[temps.index(Ta)][1][eje_x], float(dif_scale) * dif + dif_delta * np.abs(big_data[temps.index(Ta)][0]['Heat Flow'].min()), "r"
+                )  # [lims[Ta][0]:lims[Ta][1]+2]
 
         #   Plot shading
         if len(big_data[temps.index(Ta)][0]["Heat Flow"]) < len(
