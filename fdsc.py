@@ -32,8 +32,8 @@ st.markdown(
 if "slider_delta" not in st.session_state:
     st.session_state["slider_delta"] = 0.0
 
-if 'dif_delta' not in st.session_state:
-    st.session_state['dif_delta'] = 0.
+if "dif_delta" not in st.session_state:
+    st.session_state["dif_delta"] = 0.0
 
 
 #   Define slider updaters for the session_state sliders
@@ -62,8 +62,9 @@ def update_ref():
 def update_shade():
     st.session_state["shade"] = st.session_state["shade_color"]
 
+
 def update_dif_delta():
-    st.session_state['dif_delta'] = st.session_state['dif_delta_key']
+    st.session_state["dif_delta"] = st.session_state["dif_delta_key"]
 
 
 #   Initialize session_state colors
@@ -98,8 +99,8 @@ with ctr_panel:
     load_cutoff = st.slider("cutoff", min_value=2, max_value=100, value=75)
     margin_step = st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
     eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
-    int_dif_th = 0.
-    #int_dif_th = st.slider("integral threshold", min_value=0, max_value=100) / 1000
+    int_dif_th = 0.0
+    # int_dif_th = st.slider("integral threshold", min_value=0, max_value=100) / 1000
 
 #   Everything in a try to avoid errors from no files in first run
 
@@ -145,19 +146,20 @@ try:
                 step=0.01,
                 on_change=update_slider_value,
             )
-            scale, delta = st.columns([.3, .7])
-            with scale:               
-                dif_scale = st.text_input('difference scale', value = '1')
+            scale, delta = st.columns([0.3, 0.7])
+            with scale:
+                dif_scale = st.text_input("difference scale", value="1")
             with delta:
-                dif_delta = st.slider('dif delta',
-                                      max_value = 1.,
-                                      min_value=0.,
-                                      value = st.session_state['dif_delta'],
-                                      key = 'dif_delta_key',
-                                      on_change=update_dif_delta
-                                      )
+                dif_delta = st.slider(
+                    "dif delta",
+                    max_value=1.0,
+                    min_value=0.0,
+                    value=st.session_state["dif_delta"],
+                    key="dif_delta_key",
+                    on_change=update_dif_delta,
+                )
 
-            show_dif = st.checkbox('Show dif')
+            show_dif = st.checkbox("Show dif")
     #   INTEGRATION LOOP
     for i in range(len(temps)):
         #   Apply delta modification to all curves
@@ -175,7 +177,6 @@ try:
                 * (big_data[i][0]["Heat Flow"] - big_data[i][1]["Heat Flow"]).max(),
                 "Heat Flow",
             )
-
 
             st.session_state[regs_label] = [
                 big_data[i][0][eje_x].iloc[left],
@@ -198,13 +199,16 @@ try:
                 )
             )
         except ValueError:
-            st.write("Error with int limits")
+            st.write(temps[i], "Error with int limits")
+        except TypeError:
+            st.write(temps[i], 'Modify integral limits')
 
     #   Plot calculated integrals
     try:
         ax2.plot(temps, ints, "ks")
     except ValueError:
-        print("int not working")
+        #print("int not working")
+        st.write('')
     #   Add extra MODIFY controls over the integral graph
     with inte:
 
@@ -257,11 +261,19 @@ try:
         if show_dif:
             if len(big_data[temps.index(Ta)][0][eje_x]) == len(dif):
                 ax1.plot(
-                    big_data[temps.index(Ta)][0][eje_x], float(dif_scale) * dif + dif_delta *  np.abs(big_data[temps.index(Ta)][0]['Heat Flow'].min()), "r"
+                    big_data[temps.index(Ta)][0][eje_x],
+                    float(dif_scale) * dif
+                    + dif_delta
+                    * np.abs(big_data[temps.index(Ta)][0]["Heat Flow"].min()),
+                    "r",
                 )  # [lims[Ta][0]:lims[Ta][1]+2]
             else:
                 ax1.plot(
-                    big_data[temps.index(Ta)][1][eje_x], float(dif_scale) * dif + dif_delta * np.abs(big_data[temps.index(Ta)][0]['Heat Flow'].min()), "r"
+                    big_data[temps.index(Ta)][1][eje_x],
+                    float(dif_scale) * dif
+                    + dif_delta
+                    * np.abs(big_data[temps.index(Ta)][0]["Heat Flow"].min()),
+                    "r",
                 )  # [lims[Ta][0]:lims[Ta][1]+2]
 
         #   Plot shading
@@ -296,6 +308,7 @@ try:
         with inte:
             #   Keep in mind time scale is much smaller and thus require smaller step - this as a whole is annoying
             if eje_x == "t":
+                
                 st.slider(
                     "left integration limit",
                     min_value=big_data[temps.index(Ta)][0][eje_x].min(),
