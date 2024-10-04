@@ -185,19 +185,18 @@ try:
                 * (big_data[i][0]["Heat Flow"] - big_data[i][1]["Heat Flow"]).max(),
                 "Heat Flow",
             )
-
             st.session_state[regs_label] = [
                 big_data[i][0][eje_x].iloc[left],
                 big_data[i][0][eje_x].iloc[right],
             ]
-            st.session_state['x_change_check'] = eje_x
+            st.session_state['x_change_check'+str(temps[i])] = eje_x
 
         #   Find indices of integration limit in the DataFrame
         indices = big_data[i][0][eje_x][
             (big_data[i][0][eje_x] >= st.session_state[regs_label][0])
             & (big_data[i][0][eje_x] <= st.session_state[regs_label][1])
         ].index
-
+        
         #   Try to calculate integral, sometimes it wont work because auto-limits are a bit finicky
         try:
             ints.append(
@@ -261,9 +260,7 @@ try:
         )
 
         #   Plot integration limits
-        ax1.axvline(
-            x=st.session_state["regs_" + str(Ta)][0], color="r", linestyle="--"
-        )  # big_data[temps.index(Ta)][0][eje_x][lims[Ta][0]]
+        ax1.axvline(x=st.session_state["regs_" + str(Ta)][0], color="r", linestyle="--")
         ax1.axvline(x=st.session_state["regs_" + str(Ta)][1], color="r", linestyle="--")
 
         #   Plot difference
@@ -310,6 +307,7 @@ try:
     #   Show integral plot
     with inte:
         st.pyplot(fig2)
+        
 
     if mod:
 
@@ -393,10 +391,8 @@ try:
         )
         for i in range(1, len(big_data)):
 
-            #   Calculate the difference as the minimum separation required
-            dif = abs(
-                big_data[i][0]["Heat Flow"] - big_data[i - 1][0]["Heat Flow"]
-            ).max()
+            #   Calculate the difference between consecutive Ta curves - the minimum separation required
+            dif = abs(big_data[i][0]["Heat Flow"] - big_data[i - 1][0]["Heat Flow"]).max()
 
             #   Move both main and reference curves down by
             big_data[i][0]["Heat Flow"] -= dif + margin
