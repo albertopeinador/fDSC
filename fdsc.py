@@ -18,7 +18,7 @@ st.markdown(
     """
 <style>
 .big-font {
-    font-size:50px !important;
+    font-size:30px !important;
     text-align:center !important;
 }
 </style>
