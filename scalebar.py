@@ -40,7 +40,7 @@ class AnchoredScaleBar(AnchoredOffsetbox):
                                    child=bars, prop=prop, frameon=False, **kwargs)
 
         
-def add_scalebar(ax, matchx=True, matchy=True, hidex=True, hidey=True, **kwargs):
+def add_scalebar(scale_factor, ax, matchx=True, matchy=True, hidex=True, hidey=True, **kwargs):
     """ Add scalebars to axes
 
     Adds a set of scale bars to *ax*, matching the size to the ticks of the plot
@@ -62,10 +62,10 @@ def add_scalebar(ax, matchx=True, matchy=True, hidex=True, hidey=True, **kwargs)
         kwargs['sizex'] = f(ax.xaxis)
         kwargs['labelx'] = str(kwargs['sizex'])
     if matchy:
-        kwargs['sizey'] = np.round(f(ax.yaxis) * 1., 2)
+        kwargs['sizey'] = np.round(f(ax.yaxis) * scale_factor, 2)
         kwargs['labely'] = str(kwargs['sizey']) + ' mW'
         
-    sb = AnchoredScaleBar(ax.transData,   **kwargs)# bbox_to_anchor = (-.1, .5), bbox_transform = ax.TransAxes,
+    sb = AnchoredScaleBar(ax.transData, **kwargs)# bbox_to_anchor = (-.1, .5), bbox_transform = ax.TransAxes,
     ax.add_artist(sb)
 
     if hidex : ax.xaxis.set_visible(False)

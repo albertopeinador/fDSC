@@ -103,6 +103,7 @@ with ctr_panel:
     margin_step = st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
     eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
     int_dif_th = 0.0
+    scalebar_scale = st.slider('scalebar scale', min_value = 0.1, max_value = 2., value = 1., step = .05)
     # int_dif_th = st.slider("integral threshold", min_value=0, max_value=100) / 1000
 
 #   Everything in a try to avoid errors from no files in first run
@@ -453,7 +454,7 @@ try:
     ax1.spines["right"].set_visible(False)
     #ax1.yaxis.set_ticks([])
     #ax1.tick_params(axis="y", which="both", length=0)
-    scalebar = sc.add_scalebar(ax1, matchx = False, hidex = False, )
+    scalebar = sc.add_scalebar(scalebar_scale, ax1, matchx = False, hidex = False, )
 
 
     #   Show main graph
