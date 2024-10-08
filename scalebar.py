@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib.offsetbox import AnchoredOffsetbox
 class AnchoredScaleBar(AnchoredOffsetbox):
     def __init__(self, transform, sizex=0, sizey=0, labelx=None, labely=None, loc='upper left',
-                 pad=0.1, borderpad=0.1, sep=2, prop=None, barcolor="black", barwidth=None, 
+                 pad=0.1, borderpad=0.1, sep=2, prop=None, barcolor="black", barwidth=2, 
                  **kwargs):
         """
         Draw a horizontal and/or vertical  bar with the size in data coordinate
@@ -30,10 +30,10 @@ class AnchoredScaleBar(AnchoredOffsetbox):
             bars.add_artist(Rectangle((0,0), 0, sizey, ec=barcolor, lw=barwidth, fc="none"))
 
         if sizex and labelx:
-            self.xlabel = TextArea(labelx)
+            self.xlabel = TextArea(labelx, textprops= {'rotation':'vertical'})
             bars = VPacker(children=[bars, self.xlabel], align="center", pad=0, sep=sep)
         if sizey and labely:
-            self.ylabel = TextArea(labely)
+            self.ylabel = TextArea(labely, textprops= {'rotation':'vertical', 'fontsize':14, 'ma':'center'})
             bars = HPacker(children=[self.ylabel, bars], align="center", pad=0, sep=sep)
 
         AnchoredOffsetbox.__init__(self, loc, pad=pad, borderpad=borderpad,
@@ -62,8 +62,8 @@ def add_scalebar(ax, matchx=True, matchy=True, hidex=True, hidey=True, **kwargs)
         kwargs['sizex'] = f(ax.xaxis)
         kwargs['labelx'] = str(kwargs['sizex'])
     if matchy:
-        kwargs['sizey'] = np.round(f(ax.yaxis) * 0.5, 2)
-        kwargs['labely'] = str(kwargs['sizey']) + 'mW'
+        kwargs['sizey'] = np.round(f(ax.yaxis) * 1., 2)
+        kwargs['labely'] = str(kwargs['sizey']) + ' mW'
         
     sb = AnchoredScaleBar(ax.transData,   **kwargs)# bbox_to_anchor = (-.1, .5), bbox_transform = ax.TransAxes,
     ax.add_artist(sb)

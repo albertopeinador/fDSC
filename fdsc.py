@@ -35,7 +35,7 @@ if "slider_delta" not in st.session_state:
     st.session_state["slider_delta"] = 0.0
 
 if "dif_delta" not in st.session_state:
-    st.session_state["dif_delta"] = 0.0
+    st.session_state["dif_delta"] = .9
 
 
 
@@ -423,6 +423,8 @@ try:
                 big_data[i][0][eje_x].iloc[-1],
                 big_data[i][0]["Heat Flow"].iloc[-1],
                 temps[i],
+                fontsize = 15,
+                fontweight = 'book'
             )
 
             # Plot the shading
