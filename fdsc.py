@@ -6,7 +6,8 @@ import file_loader as ld
 import find_and_int as fai
 import numpy as np
 import scalebar as sc
-
+import mpld3
+import streamlit.components.v1 as components
 
 # import scipy.integrate as sc
 
@@ -82,16 +83,15 @@ if "shade" not in st.session_state:
 
 #   Define figures and axis for the plots
 
-fig, ax1 = plt.subplots(1, 1, sharex=False, sharey=True)
-fig.set_figheight(9)
-fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True)
-fig2.set_figheight(5)
+fig, ax1 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504, 4.44*1.968504), dpi = 300)
+
+fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (1, 1), dpi = 300)
 
 
 #   Create the three main columns - one for main controls (20% of the screen), one for the plots (40%)
 #       and one last one for the integrals plot and some adicional controls
 
-ctr_panel, graf, inte = st.columns([0.2, 0.4, 0.4])
+ctr_panel, graf, inte = st.columns([2, 4, 4])
 
 #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
 #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
@@ -252,6 +252,7 @@ try:
             ax=ax1,
             legend=False,
             style=st.session_state["color"],
+            linewidth = 1,
         )
         big_data[temps.index(Ta)][1].plot(
             x=eje_x,
@@ -259,7 +260,7 @@ try:
             ax=ax1,
             legend=False,
             style=st.session_state["ref"],
-            linewidth=1.6,
+            linewidth=1.1,
         )
 
         #   Plot integration limits
@@ -309,7 +310,7 @@ try:
 
     #   Show integral plot
     with inte:
-        st.pyplot(fig2)
+        st.pyplot(fig2, use_container_width=True)
         
 
     if mod:
@@ -409,6 +410,7 @@ try:
                 ax=ax1,
                 legend=False,
                 style=st.session_state["color"],
+                linewidth = 1,
             )
             big_data[i][1].plot(
                 x=eje_x,
@@ -416,15 +418,15 @@ try:
                 ax=ax1,
                 legend=False,
                 style=st.session_state["ref"],
-                linewidth=1.6,
+                linewidth=1.1,
             )
 
             #   Plot the labels on each curve
             ax1.text(
-                big_data[i][0][eje_x].iloc[-1],
+                big_data[i][0][eje_x].iloc[-1] *1.01,
                 big_data[i][0]["Heat Flow"].iloc[-1],
                 temps[i],
-                fontsize = 15,
+                fontsize = 13,
                 fontweight = 'book'
             )
 
@@ -459,8 +461,9 @@ try:
 
     #   Show main graph
     with graf:
-        st.pyplot(fig)
-
+        st.pyplot(fig, use_container_width=True)
+        fig_html = mpld3.fig_to_html(fig2)
+        components.html(fig_html, height=310, width = 310)
 
 except FileNotFoundError:
     with graf:

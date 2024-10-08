@@ -33,7 +33,7 @@ class AnchoredScaleBar(AnchoredOffsetbox):
             self.xlabel = TextArea(labelx, textprops= {'rotation':'vertical'})
             bars = VPacker(children=[bars, self.xlabel], align="center", pad=0, sep=sep)
         if sizey and labely:
-            self.ylabel = TextArea(labely, textprops= {'rotation':'vertical', 'fontsize':14, 'ma':'center'})
+            self.ylabel = TextArea(labely, textprops= {'rotation':'vertical', 'fontsize':13, 'ma':'center'})
             bars = HPacker(children=[self.ylabel, bars], align="center", pad=0, sep=sep)
 
         AnchoredOffsetbox.__init__(self, loc, pad=pad, borderpad=borderpad,
