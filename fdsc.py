@@ -1,10 +1,12 @@
-import pandas as pd
+#import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 import filehandler as tx
 import file_loader as ld
 import find_and_int as fai
 import numpy as np
+import scalebar as sc
+
 
 # import scipy.integrate as sc
 
@@ -447,8 +449,10 @@ try:
     ax1.spines["top"].set_visible(False)
     ax1.spines["left"].set_visible(False)
     ax1.spines["right"].set_visible(False)
-    ax1.yaxis.set_ticks([])
-    ax1.tick_params(axis="y", which="both", length=0)
+    #ax1.yaxis.set_ticks([])
+    #ax1.tick_params(axis="y", which="both", length=0)
+    scalebar = sc.add_scalebar(ax1, matchx = False, hidex = False, )
+
 
     #   Show main graph
     with graf:
@@ -459,4 +463,3 @@ except FileNotFoundError:
     with graf:
         # st.title('Enter folder name')
         st.markdown('<p class="big-font">Enter Folder Name</p>', unsafe_allow_html=True)
-# st.line_chart(data, x = 'Tr', y = 'Heat Flow')
