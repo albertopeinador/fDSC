@@ -522,6 +522,6 @@ except TypeError:
         #st.write(type(big_data))
         for key, (df1, df2) in big_data.items():
             if df1 is None:
-                st.write('Ta = ', key, '_ref')
-            if df2 is None:
                 st.write('Ta = ', key)
+            if df2 is None:
+                st.write('Ta = ', key, '_ref')
