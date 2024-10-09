@@ -112,7 +112,7 @@ fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.96850
 #   Create the three main columns - one for main controls (20% of the screen), one for the plots (40%)
 #       and one last one for the integrals plot and some adicional controls
 
-ctr_panel, graf, inte = st.columns([2, 4, 4])
+ctr_panel, graf, inte = st.columns([4, 4, 4])
 
 #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
 #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
