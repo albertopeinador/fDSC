@@ -130,7 +130,7 @@ with ctr_panel:
     st.write(files)
 #   Everything in a try to avoid errors from no files in first run
 
-if files is not []:
+try:
     #   Scan and find files
     temps, big_data = ld.load_files(files, load_cutoff)
 
@@ -512,7 +512,7 @@ if files is not []:
         #fig_html = mpld3.fig_to_html(fig2)
         #components.html(fig_html, height=310, width = 310)
 
-else:
+except IndexError:
     with graf:
         # st.title('Enter folder name')
         st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
