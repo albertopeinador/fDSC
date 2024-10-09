@@ -518,4 +518,9 @@ except IndexError:
         st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
 except AttributeError:
     with graf:
-        st.markdown('<p class="big-font">Missing File (reference or otherwise)</p>', unsafe_allow_html=True)
+        st.markdown('<p class="big-font">Missing File:</p>', unsafe_allow_html=True)
+        for key, (df1, df2) in big_data.items:
+            if df1 is None:
+                st.write('Ta = ', key, '_ref')
+            if df2 is None:
+                st.write('Ta = ', key)
