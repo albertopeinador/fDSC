@@ -516,3 +516,6 @@ except IndexError:
     with graf:
         # st.title('Enter folder name')
         st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
+except AttributeError:
+    with graf:
+        st.markdown('<p class="big-font">Missing File (reference or otherwise)</p>', unsafe_allow_html=True)
