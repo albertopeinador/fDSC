@@ -98,15 +98,14 @@ ctr_panel, graf, inte = st.columns([2, 4, 4])
 #       rest are self-explanatory
 
 with ctr_panel:
-    files =st.file_uploader('Upload files', accept_multiple_files = True, type = ['txt'])
-    #folder_name = st.text_input("Folder name", key="direc")
+    folder_name = st.text_input("Folder name", key="direc")
     load_cutoff = st.slider("cutoff", min_value=2, max_value=100, value=75)
     margin_step = st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
     eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
     int_dif_th = 0.0
     scalebar_scale = st.slider('scalebar scale', min_value = 0.1, max_value = 2., value = 1., step = .05)
     # int_dif_th = st.slider("integral threshold", min_value=0, max_value=100) / 1000
-files
+
 #   Everything in a try to avoid errors from no files in first run
 
 try:
