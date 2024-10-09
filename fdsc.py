@@ -1,13 +1,12 @@
 #import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-import filehandler as tx
-import file_loader as ld
+#import new_filehandler as fh
+import new_file_loader as ld
 import find_and_int as fai
 import numpy as np
 import scalebar as sc
-import mpld3
-import streamlit.components.v1 as components
+import io
 
 # import scipy.integrate as sc
 
@@ -27,6 +26,28 @@ st.markdown(
 </style>
 """,
     unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <style>
+    /* Target the file uploader to reduce its size */
+    .stFileUpload {
+        font-size: 12px;
+        padding: 5px;
+        width: 60%;
+    }
+
+    /* Optional: Adjust the file uploader button appearance */
+    .stFileUpload label {
+        padding: 2px 1px;
+        background-color: #f0f0f5;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
 
@@ -85,7 +106,7 @@ if "shade" not in st.session_state:
 
 fig, ax1 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504, 4.44*1.968504), dpi = 300)
 
-fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (1, 1), dpi = 300)
+fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504, 2.5*1.968504), dpi = 300)
 
 
 #   Create the three main columns - one for main controls (20% of the screen), one for the plots (40%)
@@ -98,7 +119,7 @@ ctr_panel, graf, inte = st.columns([2, 4, 4])
 #       rest are self-explanatory
 
 with ctr_panel:
-    files =st.file_uploader('Upload files', accept_multiple_files = True, type = ['txt'])
+    files =st.file_uploader('Upload files', accept_multiple_files = True, type = ['txt'], label_visibility='collapsed')
     #folder_name = st.text_input("Folder name", key="direc")
     load_cutoff = st.slider("cutoff", min_value=2, max_value=100, value=75)
     margin_step = st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
@@ -111,7 +132,7 @@ files
 
 try:
     #   Scan and find files
-    temps, file_dict = tx.files_to_dict(folder_name)
+    temps, big_data = ld.load_files(files, load_cutoff)
 
     #   Initialize session state for each Ta to store the delta
     for i in temps:
@@ -121,7 +142,6 @@ try:
     #   Load the found files into list of tuples of pd.DataFrames. In each tuple the first df [0] is the
     #       main curve, the second [1], is the reference curve. This will also create a '_modified.txt'
     #       formated for pandas reading.
-    big_data = ld.load_files(folder_name, temps, file_dict, load_cutoff)
 
     #   Initialize some dictionaries and list to store integral limits and results
     int_regs = {}
@@ -169,19 +189,20 @@ try:
                     )
 
     #   INTEGRATION LOOP
-    for i in range(len(temps)):
+    for i in temps:
+        
         #   Apply delta modification to all curves
-        big_data[i][0]["Heat Flow"] += (st.session_state[temps[i]] / 10) * big_data[i][
+        big_data[i][0]["Heat Flow"] += (st.session_state[i] / 10) * big_data[i][
             0
         ]["Heat Flow"].max()
 
-        if 'x_change_check'+str(temps[i]) not in st.session_state:
-            st.session_state['x_change_check'+str(temps[i])] = 'easteregg'
+        if 'x_change_check'+str(i) not in st.session_state:
+            st.session_state['x_change_check'+str(i)] = 'easteregg'
 
 
         #   Initialize session_state with the auto-generated limits
-        regs_label = "regs_" + str(temps[i])
-        if regs_label not in st.session_state or st.session_state['x_change_check'+str(temps[i])] != eje_x:
+        regs_label = "regs_" + str(i)
+        if regs_label not in st.session_state or st.session_state['x_change_check'+str(i)] != eje_x:
             #   Find auto-limits for integration
             left, right = fai.find_int_region(
                 big_data[i],
@@ -193,7 +214,7 @@ try:
                 big_data[i][0][eje_x].iloc[left],
                 big_data[i][0][eje_x].iloc[right],
             ]
-            st.session_state['x_change_check'+str(temps[i])] = eje_x
+            st.session_state['x_change_check'+str(i)] = eje_x
 
         #   Find indices of integration limit in the DataFrame
         indices = big_data[i][0][eje_x][
@@ -211,9 +232,9 @@ try:
                 )
             )
         except ValueError:
-            st.write(temps[i], "Error with int limits")
+            st.write(i, "Error with int limits")
         except TypeError:
-            st.write(temps[i], 'Modify integral limits')
+            st.write(i, 'Modify integral limits')
 
     #   Plot calculated integrals
     try:
@@ -242,12 +263,12 @@ try:
 
         #   Calculate difference between curves
         dif = (
-            big_data[temps.index(Ta)][0]["Heat Flow"]
-            - big_data[temps.index(Ta)][1]["Heat Flow"]
+            big_data[Ta][0]["Heat Flow"]
+            - big_data[Ta][1]["Heat Flow"]
         )
 
         #   Plot curves being modified
-        big_data[temps.index(Ta)][0].plot(
+        big_data[Ta][0].plot(
             x=eje_x,
             y="Heat Flow",
             ax=ax1,
@@ -255,7 +276,7 @@ try:
             style=st.session_state["color"],
             linewidth = 1,
         )
-        big_data[temps.index(Ta)][1].plot(
+        big_data[Ta][1].plot(
             x=eje_x,
             y="Heat Flow",
             ax=ax1,
@@ -270,49 +291,62 @@ try:
 
         #   Plot difference
         if show_dif:
-            if len(big_data[temps.index(Ta)][0][eje_x]) == len(dif):
+            if len(big_data[Ta][0][eje_x]) == len(dif):
                 ax1.plot(
-                    big_data[temps.index(Ta)][0][eje_x],
+                    big_data[Ta][0][eje_x],
                     float(dif_scale) * dif
                     + dif_delta
-                    * np.abs(big_data[temps.index(Ta)][0]["Heat Flow"].min()),
+                    * np.abs(big_data[Ta][0]["Heat Flow"].min()),
                     "r",
                 )  # [lims[Ta][0]:lims[Ta][1]+2]
             else:
                 ax1.plot(
-                    big_data[temps.index(Ta)][1][eje_x],
+                    big_data[Ta][1][eje_x],
                     float(dif_scale) * dif
                     + dif_delta
-                    * np.abs(big_data[temps.index(Ta)][0]["Heat Flow"].min()),
+                    * np.abs(big_data[Ta][0]["Heat Flow"].min()),
                     "r",
                 )  # [lims[Ta][0]:lims[Ta][1]+2]
 
         #   Plot shading
-        if len(big_data[temps.index(Ta)][0]["Heat Flow"]) < len(
-            big_data[temps.index(Ta)][1]["Heat Flow"]
+        if len(big_data[Ta][0]["Heat Flow"]) < len(
+            big_data[Ta][1]["Heat Flow"]
         ):
             ax1.fill_between(
-                big_data[temps.index(Ta)][0][eje_x],
-                big_data[temps.index(Ta)][0]["Heat Flow"],
-                big_data[temps.index(Ta)][1]["Heat Flow"].iloc[
-                    : len(big_data[temps.index(Ta)][0]["Heat Flow"])
+                big_data[Ta][0][eje_x],
+                big_data[Ta][0]["Heat Flow"],
+                big_data[Ta][1]["Heat Flow"].iloc[
+                    : len(big_data[Ta][0]["Heat Flow"])
                 ],
                 color=st.session_state["shade"],
             )
         else:
             ax1.fill_between(
-                big_data[temps.index(Ta)][1][eje_x],
-                big_data[temps.index(Ta)][0]["Heat Flow"].iloc[
-                    : len(big_data[temps.index(Ta)][1]["Heat Flow"])
+                big_data[Ta][1][eje_x],
+                big_data[Ta][0]["Heat Flow"].iloc[
+                    : len(big_data[Ta][1]["Heat Flow"])
                 ],
-                big_data[temps.index(Ta)][1]["Heat Flow"],
+                big_data[Ta][1]["Heat Flow"],
                 color=st.session_state["shade"],
             )
 
     #   Show integral plot
+    
+    buffer = io.BytesIO()
+    fig2.savefig(buffer, format='pdf')
+    buffer.seek(0)
     with inte:
         st.pyplot(fig2, use_container_width=True)
-        
+        name, button = st.columns(2)
+        with name:
+            inte_name = st.text_input('Save as:', label_visibility='collapsed')
+        with button:
+            st.download_button(
+                    label="Download Integral Plot",
+                    data=buffer,
+                    file_name=inte_name + '.pdf',
+                    mime="image/pdf"
+                    )        
 
     if mod:
 
@@ -323,7 +357,7 @@ try:
                 
                 st.slider(
                     "left integration limit",
-                    min_value=big_data[temps.index(Ta)][0][eje_x].min(),
+                    min_value=big_data[Ta][0][eje_x].min(),
                     max_value=float(st.session_state["regs_" + str(Ta)][1]),
                     value=float(st.session_state["regs_" + str(Ta)][0]),
                     key="slider_left",
@@ -333,7 +367,7 @@ try:
             else:
                 st.slider(
                     "left integration limit",
-                    min_value=big_data[temps.index(Ta)][0][eje_x].min(),
+                    min_value=big_data[Ta][0][eje_x].min(),
                     max_value=float(st.session_state["regs_" + str(Ta)][1]),
                     value=float(st.session_state["regs_" + str(Ta)][0]),
                     key="slider_left",
@@ -344,7 +378,7 @@ try:
                 st.slider(
                     "right integration limit",
                     min_value=float(st.session_state["regs_" + str(Ta)][0]),
-                    max_value=big_data[temps.index(Ta)][0][eje_x].max(),
+                    max_value=big_data[Ta][0][eje_x].max(),
                     value=float(st.session_state["regs_" + str(Ta)][1]),
                     key="slider_right",
                     on_change=update_slider_value_right,
@@ -354,7 +388,7 @@ try:
                 st.slider(
                     "right integration limit",
                     min_value=float(st.session_state["regs_" + str(Ta)][0]),
-                    max_value=big_data[temps.index(Ta)][0][eje_x].max(),
+                    max_value=big_data[Ta][0][eje_x].max(),
                     value=float(st.session_state["regs_" + str(Ta)][1]),
                     key="slider_right",
                     on_change=update_slider_value_right,
@@ -391,19 +425,19 @@ try:
 
         #   Define the margin using the previously defined margin_step
         margin = margin_step * (
-            float(big_data[0][1]["Heat Flow"].max())
-            - float(big_data[0][1]["Heat Flow"].min())
+            float(big_data[temps[0]][1]["Heat Flow"].max())
+            - float(big_data[temps[0]][1]["Heat Flow"].min())
         )
         for i in range(1, len(big_data)):
 
             #   Calculate the difference between consecutive Ta curves - the minimum separation required
-            dif = abs(big_data[i][0]["Heat Flow"] - big_data[i - 1][0]["Heat Flow"]).max()
+            dif = abs(big_data[temps[i]][0]["Heat Flow"] - big_data[temps[i - 1]][0]["Heat Flow"]).max()
 
             #   Move both main and reference curves down by
-            big_data[i][0]["Heat Flow"] -= dif + margin
-            big_data[i][1]["Heat Flow"] -= dif + margin
+            big_data[temps[i]][0]["Heat Flow"] -= dif + margin
+            big_data[temps[i]][1]["Heat Flow"] -= dif + margin
 
-        for i in range(len(temps)):
+        for i in temps:
             #   Plot the curves
             big_data[i][0].plot(
                 x=eje_x,
@@ -426,7 +460,7 @@ try:
             ax1.text(
                 big_data[i][0][eje_x].iloc[-1] *1.01,
                 big_data[i][0]["Heat Flow"].iloc[-1],
-                temps[i],
+                i,
                 fontsize = 13,
                 fontweight = 'book'
             )
@@ -458,13 +492,25 @@ try:
     #ax1.yaxis.set_ticks([])
     #ax1.tick_params(axis="y", which="both", length=0)
     scalebar = sc.add_scalebar(scalebar_scale, ax1, matchx = False, hidex = False, )
-
+    buffer1 = io.BytesIO()
+    fig.savefig(buffer1, format='pdf')
+    buffer1.seek(0)  # Move the cursor to the start of the buffer
 
     #   Show main graph
     with graf:
         st.pyplot(fig, use_container_width=True)
-        fig_html = mpld3.fig_to_html(fig2)
-        components.html(fig_html, height=310, width = 310)
+        name, button = st.columns(2)
+        with name:
+            plot_name = st.text_input('Save plot as:', label_visibility='collapsed')
+        with button:
+            st.download_button(
+                    label="Download Plot",
+                    data=buffer1,
+                    file_name=plot_name + '.pdf',
+                    mime="image/pdf"
+                    )        
+        #fig_html = mpld3.fig_to_html(fig2)
+        #components.html(fig_html, height=310, width = 310)
 
 except FileNotFoundError:
     with graf:

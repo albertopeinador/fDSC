@@ -15,12 +15,14 @@ def modify_text_file(file_path, start_cutoff):
         lines = lines[:-1]
     
     # Step 3: Replace two or more spaces with a tab character
-    modified_lines = [re.sub(r' {2,}', '\t', line) for line in lines]
-
-    modified_lines = [re.sub(r'\t{2,}', '\t', line) for line in modified_lines]
 
     modified_lines = [line.replace(',', '.') for line in modified_lines]
-    modified_lines = [line.lstrip('\t') for line in modified_lines]
+    modified_lines = [re.sub(r' {2,}', ',', line) for line in lines]
+
+    modified_lines = [re.sub(r'\t{2,}', ',', line) for line in modified_lines]
+
+    
+    modified_lines = [line.lstrip(',') for line in modified_lines]
     # Step 4: Write the modified lines back to the file
     with open(file_path.replace('.txt', '_modified.txt'), 'w') as file:
         file.writelines(modified_lines)
