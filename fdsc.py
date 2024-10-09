@@ -98,7 +98,8 @@ ctr_panel, graf, inte = st.columns([2, 4, 4])
 #       rest are self-explanatory
 
 with ctr_panel:
-    folder_name = st.text_input("Folder name", key="direc")
+    files =st.file_uploader('Upload files', accept_multiple_files = True, type = ['txt'])
+    #folder_name = st.text_input("Folder name", key="direc")
     load_cutoff = st.slider("cutoff", min_value=2, max_value=100, value=75)
     margin_step = st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
     eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
