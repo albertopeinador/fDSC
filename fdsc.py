@@ -130,7 +130,7 @@ with ctr_panel:
     st.write(files)
 #   Everything in a try to avoid errors from no files in first run
 
-if files is not None:
+if files is not []:
     #   Scan and find files
     temps, big_data = ld.load_files(files, load_cutoff)
 
