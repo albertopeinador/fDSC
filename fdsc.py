@@ -130,7 +130,7 @@ with ctr_panel:
 
 #   Everything in a try to avoid errors from no files in first run
 
-try:
+if files is not None:
     #   Scan and find files
     temps, big_data = ld.load_files(files, load_cutoff)
 
@@ -512,7 +512,7 @@ try:
         #fig_html = mpld3.fig_to_html(fig2)
         #components.html(fig_html, height=310, width = 310)
 
-except FileNotFoundError:
+else:
     with graf:
         # st.title('Enter folder name')
-        st.markdown('<p class="big-font">Enter Folder Name</p>', unsafe_allow_html=True)
+        st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
