@@ -127,7 +127,7 @@ with ctr_panel:
     int_dif_th = 0.0
     scalebar_scale = st.slider('scalebar scale', min_value = 0.1, max_value = 2., value = 1., step = .05)
     # int_dif_th = st.slider("integral threshold", min_value=0, max_value=100) / 1000
-    st.write(files)
+
 #   Everything in a try to avoid errors from no files in first run
 
 try:
