@@ -119,9 +119,8 @@ ctr_panel, graf, inte = st.columns([2, 4, 4])
 #       rest are self-explanatory
 
 with ctr_panel:
-    with st.expander('Controls', expanded = True):
+    with st.expander('Load controls', expanded = True):
         files =st.file_uploader('Upload files', accept_multiple_files = True, type = ['txt'], label_visibility='collapsed')
-        #folder_name = st.text_input("Folder name", key="direc")
         load_cutoff = st.slider("cutoff", min_value=2, max_value=100, value=75)
         margin_step = st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
         eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
@@ -340,7 +339,7 @@ try:
         st.pyplot(fig2, use_container_width=True)
         name, button = st.columns(2)
         with name:
-            inte_name = st.text_input('Save as:', label_visibility='collapsed')
+            inte_name = st.text_input('Save as:', label_visibility='collapsed', placeholder='Integral plot name')
         with button:
             st.download_button(
                     label="Download Integral Plot",
@@ -502,7 +501,7 @@ try:
         st.pyplot(fig, use_container_width=True)
         name, button = st.columns(2)
         with name:
-            plot_name = st.text_input('Save plot as:', label_visibility='collapsed')
+            plot_name = st.text_input('Save plot as:', label_visibility='collapsed',  placeholder='Plot name')
         with button:
             st.download_button(
                     label="Download Plot",
