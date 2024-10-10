@@ -68,12 +68,8 @@ def update_slider_value():
     st.session_state[Ta] = st.session_state["slider_delta"]
 
 
-def update_slider_value_left():
-    st.session_state["regs_" + str(Ta)][0] = st.session_state["slider_left"]
-
-
-def update_slider_value_right():
-    st.session_state["regs_" + str(Ta)][1] = st.session_state["slider_right"]
+def update_limits_slider():
+    st.session_state["regs_" + str(Ta)] = st.session_state["limits_slider"]
 
 
 def update_color():
@@ -353,47 +349,15 @@ try:
         #   Create sliders for integration limits
         with inte:
             #   Keep in mind time scale is much smaller and thus require smaller step - this as a whole is annoying
-            if eje_x == "t":
-                
-                st.slider(
-                    "left integration limit",
-                    min_value=big_data[Ta][0][eje_x].min(),
-                    max_value=float(st.session_state["regs_" + str(Ta)][1]),
-                    value=float(st.session_state["regs_" + str(Ta)][0]),
-                    key="slider_left",
-                    on_change=update_slider_value_left,
-                    step=0.001,
-                )
-            else:
-                st.slider(
-                    "left integration limit",
-                    min_value=big_data[Ta][0][eje_x].min(),
-                    max_value=float(st.session_state["regs_" + str(Ta)][1]),
-                    value=float(st.session_state["regs_" + str(Ta)][0]),
-                    key="slider_left",
-                    on_change=update_slider_value_left,
-                    step=0.1,
-                )
-            if eje_x == "t":
-                st.slider(
-                    "right integration limit",
-                    min_value=float(st.session_state["regs_" + str(Ta)][0]),
-                    max_value=big_data[Ta][0][eje_x].max(),
-                    value=float(st.session_state["regs_" + str(Ta)][1]),
-                    key="slider_right",
-                    on_change=update_slider_value_right,
-                    step=0.001,
-                )
-            else:
-                st.slider(
-                    "right integration limit",
-                    min_value=float(st.session_state["regs_" + str(Ta)][0]),
-                    max_value=big_data[Ta][0][eje_x].max(),
-                    value=float(st.session_state["regs_" + str(Ta)][1]),
-                    key="slider_right",
-                    on_change=update_slider_value_right,
-                    step=0.1,
-                )
+            st.slider(
+                "left integration limit",
+                min_value=big_data[Ta][0][eje_x].min(),
+                max_value=big_data[Ta][0][eje_x].max(),
+                value=st.session_state["regs_" + str(Ta)],
+                key="limits_slider",
+                on_change=update_limits_slider,
+                step=(big_data[Ta][0][eje_x].max() - big_data[Ta][0][eje_x].min()) / 500,
+            )
 
             #   Divide into three columns: one for each color to define
             col, ref, shading = st.columns(3)
