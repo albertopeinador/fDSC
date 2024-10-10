@@ -350,7 +350,7 @@ try:
         with inte:
             #   Keep in mind time scale is much smaller and thus require smaller step - this as a whole is annoying
             st.slider(
-                "left integration limit",
+                "Integration limits",
                 min_value=big_data[Ta][0][eje_x].min(),
                 max_value=big_data[Ta][0][eje_x].max(),
                 value=st.session_state["regs_" + str(Ta)],
