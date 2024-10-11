@@ -10,7 +10,6 @@ import tracemalloc
 #   Set layout to wide screen
 st.set_page_config(layout="wide")
 
-tracemalloc.start()
 
 #   Define text style for 'Enter folder name' text
 st.markdown(
@@ -109,9 +108,18 @@ with ctr_panel:
 #   Everything in a try to avoid errors from no files in first run
 
 try:
+    tracemalloc.start()
     #   Scan file names for relevant info and load them as dictionary with tuples dataframes. The first dataframe (big_data[Ta][0])
     #   contains data for Ta measurement and the second element (big_data[Ta][1]) is the reference.
     temps, big_data = ld.load_files(files, load_cutoff)
+
+        # Get current and peak memory usage
+    current, peak = tracemalloc.get_traced_memory()
+    st.write(f"Current memory usage: {current / 1024 / 1024:.2f} MB")
+    st.write(f"Peak memory usage: {peak / 1024 / 1024:.2f} MB")
+    
+    # Stop tracing memory
+    tracemalloc.stop()
 
     #   Initialize session state for each Ta to store the delta
     for i in temps:
@@ -488,14 +496,6 @@ try:
                     file_name=inte_name + '.pdf',
                     mime="image/pdf"
                     )        
-
-    # Get current and peak memory usage
-    current, peak = tracemalloc.get_traced_memory()
-    st.write(f"Current memory usage: {current / 1024 / 1024:.2f} MB")
-    st.write(f"Peak memory usage: {peak / 1024 / 1024:.2f} MB")
-    
-    # Stop tracing memory
-    tracemalloc.stop()
 
 except IndexError:
     with graf:
