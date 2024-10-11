@@ -229,8 +229,9 @@ try:
 
     #   Plot calculated integrals
     try:
-        print(ints)
+        
         ax2.plot(temps, ints, "ks")
+        print(ints)
     except ValueError:
         #print("int not working")
         st.write('')
