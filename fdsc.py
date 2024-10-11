@@ -37,11 +37,15 @@ if "ref" not in st.session_state:
     st.session_state["ref"] = "#0886b9"
 if "shade" not in st.session_state:
     st.session_state["shade"] = "#cccccc"
+if 'norm_lims' not in st.session_state:
+    st.session_state['norm_lims'] = [300. , 400.]
 
 
 
 #   Define slider updaters for the session_state sliders
 
+def update_norm_lims():
+    st.session_state['norm_lims'] = st.session_state['norm_lims_key']
 
 def update_slider_value():
     st.session_state[Ta] = st.session_state["slider_delta"]
@@ -70,9 +74,9 @@ def update_dif_delta():
 
 #   Define figures and axis for the plots
 
-fig, ax1 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504, 4.44*1.968504), dpi = 300)
+fig, ax1 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504, 4.44*1.968504), dpi = 100)
 
-fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504, 2.5*1.968504), dpi = 300)
+fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504, 2.5*1.968504), dpi = 100)
 
 
 #   Create the three main columns - one for main controls, one for the plots
@@ -113,9 +117,9 @@ try:
 
     #   Create MODIFY mode checkbox
     with ctr_panel:
-        mod = st.checkbox("MODIFY")
+        mode = st.radio('mode', ['MODIFY', 'NORMALIZE'], horizontal=True)
 
-    if mod:
+    if mode == 'MODIFY':
         #   Clear the axis in case they contain anything from previous runs
         plt.cla()
 
@@ -151,19 +155,15 @@ try:
                         key="dif_delta_key",
                         on_change=update_dif_delta,
                     )
-
-    #   INTEGRATION LOOP
+        #   INTEGRATION LOOP
     for i in temps:
         
         #   Apply delta modification to all curves
         big_data[i][0]["Heat Flow"] += (st.session_state[i] / 10) * big_data[i][
             0
         ]["Heat Flow"].max()
-
         if 'x_change_check'+str(i) not in st.session_state:
             st.session_state['x_change_check'+str(i)] = 'easteregg'
-
-
         #   Initialize session_state with the auto-generated limits
         regs_label = "regs_" + str(i)
         if regs_label not in st.session_state or st.session_state['x_change_check'+str(i)] != eje_x:
@@ -179,7 +179,6 @@ try:
                 big_data[i][0][eje_x].iloc[right],
             ]
             st.session_state['x_change_check'+str(i)] = eje_x
-
         #   Find indices of integration limit in the DataFrame
         indices = big_data[i][0][eje_x][
             (big_data[i][0][eje_x] >= st.session_state[regs_label][0])
@@ -189,11 +188,11 @@ try:
         #   Try to calculate integral, sometimes it wont work because auto-limits are a bit finicky
         try:
             ints.append(
-                (i, np.trapezoid(
+                [i, np.trapezoid(
                     big_data[i][0]["Heat Flow"][indices.min() : indices.max()]
                     - big_data[i][1]["Heat Flow"][indices.min() : indices.max()],
                     big_data[i][0]["t"][indices.min() : indices.max()],
-                ))
+                )]
             )
         except ValueError:
             st.write(i, "Error with int limits")
@@ -206,34 +205,30 @@ try:
         #max_ints = max(ints, key=lambda x: x[1])[1]
         result_string = '\n'.join(f"{tup[0]}\t{tup[1]}" for tup in ints)
         st.download_button('download enthalpies', result_string)
-        for i in range(len(temps)):
-            ax2.plot(temps[i], ints[i][1], "ks")
+        if mode == 'MODIFY':
+            for i in range(len(temps)):
+                ax2.plot(temps[i], ints[i][1], "ks")
     except ValueError:
         #print("int not working")
         st.write('')
     #   Add extra MODIFY controls over the integral graph
     with inte:
-
         # Further divide the space into two columns
         low, up = st.columns(2)
-
         #   In one column get a text input for the lower plotting limits of integral plot
         with low:
             lower = st.text_input("Lower Ta limit", key="lower", value="-100")
-
             lower_y = st.text_input("Lower H limit", key="lower_y", value = '0')
-
         #   In the other for the upper limits
         with up:
             upper = st.text_input("Upper Ta limit", key="upper", value="300")
             upper_y = st.text_input("Upper H limit", key="upper_y", value='0.004')
-
     #   Set plotting limits
     ax2.set_xlim((int(lower), int(upper)))
     ax2.set_ylim((float(lower_y), float(upper_y)))
 
-    if mod:
 
+    if mode == 'MODIFY':
         #   Calculate difference between curves
         dif = (
             big_data[Ta][0]["Heat Flow"]
@@ -303,26 +298,6 @@ try:
                 color=st.session_state["shade"],
             )
 
-    #   Show integral plot
-    
-    buffer = io.BytesIO()
-    fig2.savefig(buffer, format='pdf')
-    buffer.seek(0)
-    with inte:
-        st.pyplot(fig2, use_container_width=True)
-        name, button = st.columns(2)
-        with name:
-            inte_name = st.text_input('Save as:', label_visibility='collapsed', placeholder='Integral plot name')
-        with button:
-            st.download_button(
-                    label="Download Integral Plot",
-                    data=buffer,
-                    file_name=inte_name + '.pdf',
-                    mime="image/pdf"
-                    )        
-
-    if mod:
-
         #   Create sliders for integration limits
         with inte:
             #   Keep in mind time scale is much smaller and thus require smaller step - this as a whole is annoying
@@ -360,6 +335,36 @@ try:
                     key="shade_color",
                     on_change=update_shade,
                 )
+    elif mode == 'NORMALIZE':
+        with ctr_panel:
+            norm_lims = st.slider('norm limits',
+                                  min_value=big_data[temps[-1]][1][eje_x].min(),
+                                  max_value=big_data[temps[-1]][1][eje_x].max(),
+                                  value =st.session_state['norm_lims'],
+                                  on_change=update_norm_lims,
+                                  key = 'norm_lims_key',
+                                  step = (big_data[temps[-1]][1][eje_x].max()-big_data[temps[-1]][1][eje_x].min()) / 100.)
+
+        big_data[temps[-1]][1].plot(x = eje_x, y= 'Heat Flow', ax = ax1)
+        ax1.axvline(st.session_state['norm_lims'][0], color = 'b', linestyle = '--')
+        ax1.axvline(st.session_state['norm_lims'][1], color = 'b', linestyle = '--')
+        norm_indices = big_data[temps[-1]][1][eje_x][
+            (big_data[temps[-1]][1][eje_x] >= st.session_state['norm_lims'][0])
+            & (big_data[temps[-1]][1][eje_x] <= st.session_state['norm_lims'][1])
+            ].index
+
+        try:
+            m = (big_data[temps[-1]][1]['Heat Flow'][norm_indices.max()] - big_data[temps[-1]][1]['Heat Flow'][norm_indices.min()]) / ((big_data[temps[-1]][1][eje_x][norm_indices.max()]-big_data[temps[-1]][1][eje_x][norm_indices.min()]))
+            b = big_data[temps[-1]][1]['Heat Flow'][norm_indices.min()] - m * big_data[temps[-1]][1][eje_x][norm_indices.min()]
+            norm_ref = b + m * big_data[temps[-1]][1]['t'][norm_indices.min() : norm_indices.max()]
+            norm_value = np.trapezoid(big_data[temps[-1]][1]['Heat Flow'][norm_indices.min() : norm_indices.max()] - norm_ref, big_data[temps[-1]][0]["t"][norm_indices.min() : norm_indices.max()])
+            st.write(norm_value)
+            for i in range(len(temps)):
+                ints[i][1] = ints[i][1] / norm_value
+                ax2.plot(temps[i], ints[i][1], "ks")
+        except KeyError:
+            st.write('set Tm limits')
+           
 
     else:
         #   Code for MAIN plot with all the curves
@@ -451,6 +456,24 @@ try:
                     file_name=plot_name + '.pdf',
                     mime="image/pdf"
                     )        
+            #   Show integral plot
+        
+    buffer = io.BytesIO()
+    fig2.savefig(buffer, format='pdf')
+    buffer.seek(0)
+    with inte:
+        st.pyplot(fig2, use_container_width=True)
+        name, button = st.columns(2)
+        with name:
+            inte_name = st.text_input('Save as:', label_visibility='collapsed', placeholder='Integral plot name')
+        with button:
+            st.download_button(
+                    label="Download Integral Plot",
+                    data=buffer,
+                    file_name=inte_name + '.pdf',
+                    mime="image/pdf"
+                    )        
+
 
 
 except IndexError:
