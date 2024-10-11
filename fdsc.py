@@ -238,6 +238,7 @@ try:
 
         # Further divide the space into two columns
         low, up = st.columns(2)
+        print(ints)
         mins = .9*np.array(ints).min()
         #   In one column get a text input for the lower plotting limit of integral plot
         with low:
