@@ -476,7 +476,7 @@ try:
 
 
 
-except IndexError or KeyError:
+except IndexError:
     with graf:
         st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
 except TypeError:
@@ -487,3 +487,6 @@ except TypeError:
                 st.write('Ta = ', key)
             if df2 is None:
                 st.write('Ta = ', key, '_ref')
+except KeyError:
+    with graf:
+        st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
