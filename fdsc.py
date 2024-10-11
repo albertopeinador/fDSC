@@ -248,7 +248,7 @@ try:
         with up:
             upper = st.text_input("Upper Ta limit", key="upper", value="300")
             upper_y = st.text_input("Upper H limit", key="upper_y", value=str(max(ints)))
-
+            st.write(ints)
     #   Set plotting limits
     ax2.set_xlim((int(lower), int(upper)))
     ax2.set_ylim((float(lower_y), float(upper_y)))
