@@ -204,7 +204,8 @@ try:
         #min_ints = min(ints, key=lambda x: x[1])[1]
         #max_ints = max(ints, key=lambda x: x[1])[1]
         result_string = '\n'.join(f"{tup[0]}\t{tup[1]}" for tup in ints)
-        st.download_button('download enthalpies', result_string)
+        with inte:
+            st.download_button('download enthalpies', result_string)
         if mode == 'MODIFY':
             for i in range(len(temps)):
                 ax2.plot(temps[i], ints[i][1], "ks")
@@ -299,7 +300,7 @@ try:
             )
 
         #   Create sliders for integration limits
-        with inte:
+        with ctr_panel:
             #   Keep in mind time scale is much smaller and thus require smaller step - this as a whole is annoying
             st.slider(
                 "Integration limits",
