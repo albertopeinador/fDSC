@@ -242,7 +242,8 @@ try:
         #   In one column get a text input for the lower plotting limit of integral plot
         with low:
             lower = st.text_input("Lower Ta limit", key="lower", value="-100")
-            lower_y = st.text_input("Lower H limit", key="lower_y", value = str(.9*min(ints)))
+            if ints is not []:
+                lower_y = st.text_input("Lower H limit", key="lower_y", value = str(.9*min(ints)))
 
         #   In the other for the upper limit
         with up:
