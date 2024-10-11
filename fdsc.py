@@ -226,9 +226,7 @@ try:
             with up:
                 upper = st.text_input("Upper Ta limit", key="upper", value="300")
                 upper_y = st.text_input("Upper H limit", key="upper_y", value='0.004')
-    #   Set plotting limits
-    ax2.set_xlim((int(lower), int(upper)))
-    ax2.set_ylim((float(lower_y), float(upper_y)))
+
 
 
     if mode == 'MODIFY':
@@ -339,6 +337,9 @@ try:
                     on_change=update_shade,
                 )
     elif mode == 'NORMALIZE':
+            #   Set plotting limits
+        lower_y, upper_y = -0.1, .4
+        
         with ctr_panel:
             norm_lims = st.slider('norm limits',
                                   min_value=big_data[temps[-1]][1][eje_x].min(),
@@ -440,6 +441,9 @@ try:
     ax1.spines["top"].set_visible(False)
     ax1.spines["left"].set_visible(False)
     ax1.spines["right"].set_visible(False)
+    #   Set plotting limits
+    ax2.set_xlim((int(lower), int(upper)))
+    ax2.set_ylim((float(lower_y), float(upper_y)))
 
     scalebar = sc.add_scalebar(scalebar_scale, ax1, matchx = False, hidex = False, )
     buffer1 = io.BytesIO()
