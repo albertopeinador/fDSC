@@ -238,7 +238,7 @@ try:
 
         # Further divide the space into two columns
         low, up = st.columns(2)
-        mins = .9*min(ints)
+        mins = .9*np.array(ints).min()
         #   In one column get a text input for the lower plotting limit of integral plot
         with low:
             lower = st.text_input("Lower Ta limit", key="lower", value="-100")
