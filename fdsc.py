@@ -124,7 +124,7 @@ try:
 
     #   Create MODIFY mode checkbox
     with ctr_panel:
-        mode = st.radio('mode', ['MODIFY', 'NORMALIZE'], horizontal=True)
+        mode = st.radio('mode', ['FULL', 'MODIFY', 'NORMALIZE'], horizontal=True)
 
     if mode == 'MODIFY':
         #   Clear the axis in case they contain anything from previous runs
