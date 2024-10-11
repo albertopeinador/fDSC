@@ -242,12 +242,12 @@ try:
         #   In one column get a text input for the lower plotting limit of integral plot
         with low:
             lower = st.text_input("Lower Ta limit", key="lower", value="-100")
-            lower_y = st.text_input("Lower H limit", key="lower_y", value = min(ints))
+            lower_y = st.text_input("Lower H limit", key="lower_y", value = str(min(ints)))
 
         #   In the other for the upper limit
         with up:
             upper = st.text_input("Upper Ta limit", key="upper", value="300")
-            upper_y = st.text_input("Upper H limit", key="upper_y", value=max(ints))
+            upper_y = st.text_input("Upper H limit", key="upper_y", value=str(max(ints)))
 
     #   Set plotting limits
     ax2.set_xlim((int(lower), int(upper)))
