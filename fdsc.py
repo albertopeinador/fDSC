@@ -1,14 +1,10 @@
-#import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-#import new_filehandler as fh
 import new_file_loader as ld
 import find_and_int as fai
 import numpy as np
 import scalebar as sc
 import io
-
-# import scipy.integrate as sc
 
 
 #   Set layout to wide screen
@@ -79,7 +75,7 @@ fig, ax1 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504
 fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504, 2.5*1.968504), dpi = 300)
 
 
-#   Create the three main columns - one for main controls (20% of the screen), one for the plots (40%)
+#   Create the three main columns - one for main controls, one for the plots
 #       and one last one for the integrals plot and some adicional controls
 
 ctr_panel, graf, inte = st.columns([3, 4, 4])
@@ -101,7 +97,8 @@ with ctr_panel:
 #   Everything in a try to avoid errors from no files in first run
 
 try:
-    #   Scan and find files
+    #   Scan file names for relevant info and load them as dictionary with tuples dataframes. The first dataframe (big_data[Ta][0])
+    #   contains data for Ta measurement and the second element (big_data[Ta][1]) is the reference.
     temps, big_data = ld.load_files(files, load_cutoff)
 
     #   Initialize session state for each Ta to store the delta
@@ -109,14 +106,10 @@ try:
         if i not in st.session_state:
             st.session_state[i] = 0.0
 
-    #   Load the found files into list of tuples of pd.DataFrames. In each tuple the first df [0] is the
-    #       main curve, the second [1], is the reference curve. This will also create a '_modified.txt'
-    #       formated for pandas reading.
 
-    #   Initialize some dictionaries and list to store integral limits and results
-    int_regs = {}
+    #   Initialize list to store integral results
     ints = []
-    lims = {}
+
 
     #   Create MODIFY mode checkbox
     with ctr_panel:
@@ -128,7 +121,7 @@ try:
 
         #   Add modification controls to first column
         with ctr_panel:
-            #   Define curve to modify from its Ta
+            #   Create selectbox to select curve to modify
             Ta = st.selectbox("Ta", temps)
 
             #   Define delta for the selected curve, this will be added to the main curve
@@ -141,10 +134,11 @@ try:
                 step=0.01,
                 on_change=update_slider_value,
             )
-            
+            #   Check if you want to show difference plot
             show_dif = st.checkbox("Show dif")
-
+            #   Difference plot controls in two columns (30% width for scale and 70% for position)
             scale, delta = st.columns([0.3, 0.7])
+            
             if show_dif:
                 with scale:
                     dif_scale = st.text_input("difference scale", value="1")
@@ -208,6 +202,8 @@ try:
 
     #   Plot calculated integrals
     try:
+        min_ints = min(ints, key=lambda x: x[1])[1]
+        max_ints = max(ints, key=lambda x: x[1])[1]
         result_string = '\n'.join(f"{tup[0]}\t{tup[1]}" for tup in ints)
         st.download_button('download enthalpies', result_string)
         for i in range(len(temps)):
@@ -221,17 +217,16 @@ try:
         # Further divide the space into two columns
         low, up = st.columns(2)
 
-        #   In one column get a text input for the lower plotting limit of integral plot
+        #   In one column get a text input for the lower plotting limits of integral plot
         with low:
             lower = st.text_input("Lower Ta limit", key="lower", value="-100")
-            try:
-                lower_y = st.text_input("Lower H limit", key="lower_y", value = '7e-5')
-            except ValueError:
-                st.write('mierda')
-        #   In the other for the upper limit
+
+            lower_y = st.text_input("Lower H limit", key="lower_y", value = str(min_ints * .9))
+
+        #   In the other for the upper limits
         with up:
             upper = st.text_input("Upper Ta limit", key="upper", value="300")
-            upper_y = st.text_input("Upper H limit", key="upper_y", value='0.0004')
+            upper_y = st.text_input("Upper H limit", key="upper_y", value=str(max_ints * 1.1))
 
     #   Set plotting limits
     ax2.set_xlim((int(lower), int(upper)))
@@ -256,7 +251,7 @@ try:
         )
         big_data[Ta][1].plot(
             x=eje_x,
-            y="Heat Flow",
+            y = "Heat Flow",
             ax=ax1,
             legend=False,
             style=st.session_state["ref"],
@@ -276,7 +271,7 @@ try:
                     + dif_delta
                     * np.abs(big_data[Ta][0]["Heat Flow"].min()),
                     "r",
-                )  # [lims[Ta][0]:lims[Ta][1]+2]
+                )
             else:
                 ax1.plot(
                     big_data[Ta][1][eje_x],
@@ -284,7 +279,7 @@ try:
                     + dif_delta
                     * np.abs(big_data[Ta][0]["Heat Flow"].min()),
                     "r",
-                )  # [lims[Ta][0]:lims[Ta][1]+2]
+                )
 
         #   Plot shading
         if len(big_data[Ta][0]["Heat Flow"]) < len(
@@ -369,11 +364,13 @@ try:
     else:
         #   Code for MAIN plot with all the curves
 
-        #   Define the margin using the previously defined margin_step
+        #   Define the margin using the previously defined margin_step by multiplying the step times
+        #   the difference between max and min of first curve
         margin = margin_step * (
             float(big_data[temps[0]][1]["Heat Flow"].max())
             - float(big_data[temps[0]][1]["Heat Flow"].min())
         )
+        #   move down relative to the previous curve, so the loop starts with the second curve and moves 
         for i in range(1, len(big_data)):
 
             #   Calculate the difference between consecutive Ta curves - the minimum separation required

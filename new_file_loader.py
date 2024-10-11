@@ -1,7 +1,6 @@
 from io import StringIO
 import new_filehandler as fh
 import pandas as pd
-import streamlit as st
 
 def load_files(upload_files, cutoff):
     big_data = {}
@@ -14,7 +13,8 @@ def load_files(upload_files, cutoff):
                 mod = fh.modify_text_file(bytes_data, cutoff)
                 mod_ref = fh.modify_text_file(bytes_data_ref, cutoff)
 
-                big_data[t] = (pd.read_csv(StringIO(mod), sep = ',', encoding = 'latin1', skipinitialspace = True), pd.read_csv(StringIO(mod_ref), sep = ',', encoding = 'latin1', skipinitialspace = True))
+                big_data[t] = (pd.read_csv(StringIO(mod), sep = ',', encoding = 'latin1', skipinitialspace = True),
+                                pd.read_csv(StringIO(mod_ref), sep = ',', encoding = 'latin1', skipinitialspace = True))
             elif dict[t][0] == None:
                 bytes_data_ref = dict[t][1].read().decode('latin1')
                 mod_ref = fh.modify_text_file(bytes_data_ref, cutoff)
