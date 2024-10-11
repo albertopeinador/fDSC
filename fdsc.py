@@ -238,13 +238,14 @@ try:
 
         # Further divide the space into two columns
         low, up = st.columns(2)
-
+        mins = .9*min(ints)
         #   In one column get a text input for the lower plotting limit of integral plot
         with low:
             lower = st.text_input("Lower Ta limit", key="lower", value="-100")
-            if ints is not []:
-                lower_y = st.text_input("Lower H limit", key="lower_y", value = str(.9*min(ints)))
-
+            try:
+                lower_y = st.text_input("Lower H limit", key="lower_y", value = str(mins))
+            except ValueError:
+                st.write('mierda')
         #   In the other for the upper limit
         with up:
             upper = st.text_input("Upper Ta limit", key="upper", value="300")
