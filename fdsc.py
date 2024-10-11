@@ -82,7 +82,7 @@ fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.96850
 #   Create the three main columns - one for main controls, one for the plots
 #       and one last one for the integrals plot and some adicional controls
 
-ctr_panel, graf, inte = st.columns([3, 4, 4])
+ctr_panel, graf, inte = st.columns([3, 4, 5])
 
 #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
 #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
@@ -476,7 +476,7 @@ try:
 
 
 
-except IndexError:
+except IndexError or KeyError:
     with graf:
         st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
 except TypeError:
