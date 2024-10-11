@@ -28,7 +28,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown(
+'''st.markdown(
     """
     <style>
     /* Target the file uploader to reduce its size */
@@ -49,15 +49,19 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
+'''
 
 #   Initialize session states
 
-if "slider_delta" not in st.session_state:
-    st.session_state["slider_delta"] = 0.0
 
 if "dif_delta" not in st.session_state:
     st.session_state["dif_delta"] = .9
+if "color" not in st.session_state:
+    st.session_state["color"] = "#2ca50b"
+if "ref" not in st.session_state:
+    st.session_state["ref"] = "#0886b9"
+if "shade" not in st.session_state:
+    st.session_state["shade"] = "#cccccc"
 
 
 
@@ -88,15 +92,6 @@ def update_dif_delta():
     st.session_state["dif_delta"] = st.session_state["dif_delta_key"]
 
 
-#   Initialize session_state colors
-
-if "color" not in st.session_state:
-    st.session_state["color"] = "#2ca50b"
-if "ref" not in st.session_state:
-    st.session_state["ref"] = "#0886b9"
-if "shade" not in st.session_state:
-    st.session_state["shade"] = "#cccccc"
-
 
 #   Define figures and axis for the plots
 
@@ -108,7 +103,7 @@ fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.96850
 #   Create the three main columns - one for main controls (20% of the screen), one for the plots (40%)
 #       and one last one for the integrals plot and some adicional controls
 
-ctr_panel, graf, inte = st.columns([4, 4, 4])
+ctr_panel, graf, inte = st.columns([3, 4, 4])
 
 #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
 #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
@@ -122,7 +117,7 @@ with ctr_panel:
         eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
         int_dif_th = 0.0
         scalebar_scale = st.slider('scalebar scale', min_value = 0.1, max_value = 2., value = 1., step = .05)
-    # int_dif_th = st.slider("integral threshold", min_value=0, max_value=100) / 1000
+
 
 #   Everything in a try to avoid errors from no files in first run
 
@@ -247,13 +242,16 @@ try:
         #   In one column get a text input for the lower plotting limit of integral plot
         with low:
             lower = st.text_input("Lower Ta limit", key="lower", value="-100")
+            lower_y = st.text_input("Lower H limit", key="lower_y")
 
         #   In the other for the upper limit
         with up:
             upper = st.text_input("Upper Ta limit", key="upper", value="300")
+            upper_y = st.text_input("Upper H limit", key="upper_y")
 
     #   Set plotting limits
     ax2.set_xlim((int(lower), int(upper)))
+    ax2.set_ylim((int(lower_y), int(upper_y)))
 
     if mod:
 
@@ -453,8 +451,7 @@ try:
     ax1.spines["top"].set_visible(False)
     ax1.spines["left"].set_visible(False)
     ax1.spines["right"].set_visible(False)
-    #ax1.yaxis.set_ticks([])
-    #ax1.tick_params(axis="y", which="both", length=0)
+
     scalebar = sc.add_scalebar(scalebar_scale, ax1, matchx = False, hidex = False, )
     buffer1 = io.BytesIO()
     fig.savefig(buffer1, format='pdf')
@@ -473,17 +470,14 @@ try:
                     file_name=plot_name + '.pdf',
                     mime="image/pdf"
                     )        
-        #fig_html = mpld3.fig_to_html(fig2)
-        #components.html(fig_html, height=310, width = 310)
+
 
 except IndexError:
     with graf:
-        # st.title('Enter folder name')
         st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
 except TypeError:
     with graf:
         st.markdown('<p class="big-font">Missing File:</p>', unsafe_allow_html=True)
-        #st.write(type(big_data))
         for key, (df1, df2) in big_data.items():
             if df1 is None:
                 st.write('Ta = ', key)
