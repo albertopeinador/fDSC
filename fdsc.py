@@ -204,7 +204,7 @@ try:
         #min_ints = min(ints, key=lambda x: x[1])[1]
         #max_ints = max(ints, key=lambda x: x[1])[1]
         result_string = '\n'.join(f"{tup[0]}\t{tup[1]}" for tup in ints)
-        with inte:
+        with ctr_panel:
             st.download_button('download enthalpies', result_string)
         if mode == 'MODIFY':
             for i in range(len(temps)):
@@ -214,16 +214,18 @@ try:
         st.write('')
     #   Add extra MODIFY controls over the integral graph
     with inte:
-        # Further divide the space into two columns
-        low, up = st.columns(2)
-        #   In one column get a text input for the lower plotting limits of integral plot
-        with low:
-            lower = st.text_input("Lower Ta limit", key="lower", value="-100")
-            lower_y = st.text_input("Lower H limit", key="lower_y", value = '0')
-        #   In the other for the upper limits
-        with up:
-            upper = st.text_input("Upper Ta limit", key="upper", value="300")
-            upper_y = st.text_input("Upper H limit", key="upper_y", value='0.004')
+        with st.expander('Integral plot limits', expanded = True):
+
+            # Further divide the space into two columns
+            low, up = st.columns(2)
+            #   In one column get a text input for the lower plotting limits of integral plot
+            with low:
+                lower = st.text_input("Lower Ta limit", key="lower", value="-100")
+                lower_y = st.text_input("Lower H limit", key="lower_y", value = '0')
+            #   In the other for the upper limits
+            with up:
+                upper = st.text_input("Upper Ta limit", key="upper", value="300")
+                upper_y = st.text_input("Upper H limit", key="upper_y", value='0.004')
     #   Set plotting limits
     ax2.set_xlim((int(lower), int(upper)))
     ax2.set_ylim((float(lower_y), float(upper_y)))
