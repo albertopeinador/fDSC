@@ -251,7 +251,7 @@ try:
 
     #   Set plotting limits
     ax2.set_xlim((int(lower), int(upper)))
-    ax2.set_ylim((lower_y, upper_y))
+    ax2.set_ylim((float(lower_y), float(upper_y)))
 
     if mod:
 
