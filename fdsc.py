@@ -28,28 +28,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-'''st.markdown(
-    """
-    <style>
-    /* Target the file uploader to reduce its size */
-    .stFileUpload {
-        font-size: 12px;
-        padding: 5px;
-        width: 60%;
-    }
 
-    /* Optional: Adjust the file uploader button appearance */
-    .stFileUpload label {
-        padding: 2px 1px;
-        background-color: #f0f0f5;
-        border-radius: 4px;
-        font-size: 12px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-'''
 
 #   Initialize session states
 
@@ -216,11 +195,11 @@ try:
         #   Try to calculate integral, sometimes it wont work because auto-limits are a bit finicky
         try:
             ints.append(
-                np.trapezoid(
+                (i, np.trapezoid(
                     big_data[i][0]["Heat Flow"][indices.min() : indices.max()]
                     - big_data[i][1]["Heat Flow"][indices.min() : indices.max()],
                     big_data[i][0]["t"][indices.min() : indices.max()],
-                )
+                ))
             )
         except ValueError:
             st.write(i, "Error with int limits")
@@ -229,8 +208,10 @@ try:
 
     #   Plot calculated integrals
     try:
-        st.write(ints)
-        ax2.plot(temps, ints, "ks")
+        result_string = '\n'.join(f"{tup[0]}\t{tup[1]}" for tup in ints)
+        st.download_button('download enthalpies', result_string)
+        for i in range(len(temps)):
+            ax2.plot(temps[i], ints[i][1], "ks")
     except ValueError:
         #print("int not working")
         st.write('')
@@ -251,7 +232,7 @@ try:
         with up:
             upper = st.text_input("Upper Ta limit", key="upper", value="300")
             upper_y = st.text_input("Upper H limit", key="upper_y", value='0.0004')
-            st.write(ints)
+
     #   Set plotting limits
     ax2.set_xlim((int(lower), int(upper)))
     ax2.set_ylim((float(lower_y), float(upper_y)))
