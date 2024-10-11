@@ -5,11 +5,12 @@ import find_and_int as fai
 import numpy as np
 import scalebar as sc
 import io
-
+import tracemalloc
 
 #   Set layout to wide screen
 st.set_page_config(layout="wide")
 
+tracemalloc.start()
 
 #   Define text style for 'Enter folder name' text
 st.markdown(
@@ -488,7 +489,13 @@ try:
                     mime="image/pdf"
                     )        
 
-
+    # Get current and peak memory usage
+    current, peak = tracemalloc.get_traced_memory()
+    st.write(f"Current memory usage: {current / 1024 / 1024:.2f} MB")
+    st.write(f"Peak memory usage: {peak / 1024 / 1024:.2f} MB")
+    
+    # Stop tracing memory
+    tracemalloc.stop()
 
 except IndexError:
     with graf:
