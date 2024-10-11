@@ -119,7 +119,7 @@ try:
     st.write(f"Peak memory usage: {peak / 1024 / 1024:.2f} MB")
     
     # Stop tracing memory
-    tracemalloc.stop()
+    #tracemalloc.stop()
 
     #   Initialize session state for each Ta to store the delta
     for i in temps:
