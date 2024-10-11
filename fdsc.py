@@ -25,6 +25,13 @@ st.markdown(
 )
 
 
+hide_streamlit_style = """
+<style>
+    #root > div:nth-child(1) > div > div > div > div > section > div {padding-top: 0rem;}
+</style>
+
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 #   Initialize session states
 
@@ -339,7 +346,7 @@ try:
     elif mode == 'NORMALIZE':
             #   Set plotting limits
         lower_y, upper_y = -0.1, .4
-        
+
         with ctr_panel:
             norm_lims = st.slider('norm limits',
                                   min_value=big_data[temps[-1]][1][eje_x].min(),
