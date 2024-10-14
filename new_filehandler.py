@@ -2,12 +2,12 @@ import re
 import bisect as bi
 #import pandas as pd
 
-def modify_text_file(file_content, start_cutoff):
+def modify_text_file(file_content):
     # Step 1: Read the entire file
     lines = file_content.splitlines()
     
     # Step 2: Remove the last couple of lines
-    lines = lines [:1] + lines[start_cutoff:]
+    lines = lines [:1] + lines
 
     if lines[-1][0].isalpha():
         lines = lines[:-1]
@@ -25,26 +25,33 @@ def modify_text_file(file_content, start_cutoff):
 
 
 
-def files_to_dict(files_upload):
+# Modify to take file names and file contents separately
+def files_to_dict(files_upload, file_names):
     temps_files = {}
     temps = []
+    
     if files_upload is not None:
-        for file in files_upload:
-            match = re.search(r'_(minus)?(\d+)\s*(degree|deg)(_ref)?(_modified)?', file.name)
+        # Iterate over the files using both content and name
+        for file_content, file_name in zip(files_upload, file_names):
+            # Use file name to extract temperature info
+            match = re.search(r'_(minus)?(\d+)\s*(degree|deg)(_ref)?(_modified)?', file_name)
             if match:
                 if match.group(5):
                     continue
                 number_str = match.group(2)
                 number = int(number_str)
                 if match.group(1):
-                    number = - number
+                    number = -number
                 if number not in temps_files:
                     temps_files[number] = [None, None]
                     bi.insort(temps, number)
-                if match.group(4):
-                    temps_files[number][1] = file
-                else:
-                    # Otherwise, place it in the first slot (index 0)
-                    temps_files[number][0] = file
+                
+                # Use file content in the corresponding slots instead of file objects
+                if match.group(4):  # ref file
+                    temps_files[number][1] = file_content
+                else:  # regular file
+                    temps_files[number][0] = file_content
+
     return temps, temps_files
+
 

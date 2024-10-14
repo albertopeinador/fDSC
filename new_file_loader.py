@@ -1,31 +1,50 @@
+import hashlib
+import re
+import pandas as pd
 from io import StringIO
 import new_filehandler as fh
-import pandas as pd
 import streamlit as st
 
+# Function to compute the hash of file content
+def compute_file_hash(file):
+    file_content = file.read()
+    file.seek(0)  # Reset the file pointer
+    return hashlib.md5(file_content).hexdigest(), file_content
+
 @st.cache_data
-def load_files(upload_files, cutoff):
+def load_files(file_contents, file_names, load_lims, eje_x):
+
+
     big_data = {}
-    if upload_files is not None:
-        temps, dict = fh.files_to_dict(upload_files)
-        for t in temps:
-            if dict[t][0] != None and dict[t][1] != None:
-                bytes_data = dict[t][0].read().decode('latin1')
-                bytes_data_ref = dict[t][1].read().decode('latin1')
-                mod = fh.modify_text_file(bytes_data, cutoff)
-                mod_ref = fh.modify_text_file(bytes_data_ref, cutoff)
+    
+    # Pass both file contents and file names
+    temps, file_dict = fh.files_to_dict(file_contents, file_names)
 
-                big_data[t] = (pd.read_csv(StringIO(mod), sep = ',', encoding = 'latin1', skipinitialspace = True),
-                                pd.read_csv(StringIO(mod_ref), sep = ',', encoding = 'latin1', skipinitialspace = True))
-            elif dict[t][0] == None:
-                bytes_data_ref = dict[t][1].read().decode('latin1')
-                mod_ref = fh.modify_text_file(bytes_data_ref, cutoff)
+    for t in temps:
+        file_0_content = file_dict[t][0]
+        file_1_content = file_dict[t][1]
 
-                big_data[t] = (None, pd.read_csv(StringIO(mod_ref), sep = ',', encoding = 'latin1', skipinitialspace = True))
-            elif dict[t][1] == None:
-                bytes_data_ref = dict[t][0].read().decode('latin1')
-                mod_ref = fh.modify_text_file(bytes_data_ref, cutoff)
-
-                big_data[t] = (pd.read_csv(StringIO(mod_ref), sep = ',', encoding = 'latin1', skipinitialspace = True), None)
+        if file_0_content is not None and file_1_content is not None:
+            mod = fh.modify_text_file(file_0_content.decode('latin1'))
+            mod_ref = fh.modify_text_file(file_1_content.decode('latin1'))
+            df = pd.read_csv(StringIO(mod), sep=',', encoding='latin1', skipinitialspace=True)
+            df = df.apply(pd.to_numeric, errors='coerce')
+            df = df[(df[eje_x] >= load_lims[0]) & (df[eje_x] <= load_lims[1])]
+            dfref = pd.read_csv(StringIO(mod_ref), sep=',', encoding='latin1', skipinitialspace=True)
+            dfref = dfref.apply(pd.to_numeric, errors='coerce')
+            dfref = dfref[(dfref[eje_x] >= load_lims[0]) & (dfref[eje_x] <= load_lims[1])]
+            big_data[t] = (df,dfref)
+        elif file_0_content is None:
+            mod_ref = fh.modify_text_file(file_1_content.decode('latin1'))
+            df = pd.read_csv(StringIO(mod_ref), sep=',', encoding='latin1', skipinitialspace=True)
+            df = df.apply(pd.to_numeric, errors='coerce')
+            df = df[(df[eje_x] >= load_lims[0]) & (df[eje_x] <= load_lims[1])]
+            big_data[t] = (None, df)
+        elif file_1_content is None:
+            mod = fh.modify_text_file(file_0_content.decode('latin1'))
+            df = pd.read_csv(StringIO(mod), sep=',', encoding='latin1', skipinitialspace=True)
+            df = df.apply(pd.to_numeric, errors='coerce')
+            df = df[(df[eje_x] >= load_lims[0]) & (df[eje_x] <= load_lims[1])]
+            big_data[t] = (df, None)
 
     return temps, big_data
