@@ -546,9 +546,9 @@ try:
                     file_name=plot_name + '.pdf',
                     mime="image/pdf"
                     )      
-#except IndexError:
-#    with graf:
-#        st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
+except IndexError:
+    with graf:
+        st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
 except TypeError:
     with graf:
         st.markdown('<p class="big-font">Missing File:</p>', unsafe_allow_html=True)
