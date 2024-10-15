@@ -26,7 +26,7 @@ After that all controls should be fairly intuitive.
 
 Note some limitations of the app.
 + The x axis should be selected at the begining, otherwise changes to the integration limits will be lost, as they will be recalculated to be in the correct domain.
-+ If you go back and select a previously modified curve, it will reset the changes made to that curve. This will happen even when you go back to the `MODIFY` mode after normalizing or checking out the `FULL` plot, **the changes to the first curve will be reset if you do this**.
++ If you go back and select a previously modified curve, it will reset the changes made to that curve. This will happen even when you go back to the ` MODIFY` mode after normalizing or checking out the `FULL` plot, **the changes to the first curve will be reset if you do this**.
 
 ##  Credit
 Huge credit goes to GitHub user dmeliza for the code relating to the vertical scalebar. I have modified it slightly, but it is essencially their code.
