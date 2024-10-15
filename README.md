@@ -2,7 +2,7 @@
 A web app to process your flash-DSC data.
 ##  Introduction
 Flash DSC (flash differencial scanning calirometry) is an ultra-fast characterization technique used in several fileds of reasearch. This web app has been developed with polymer characterization in mind.
-It is a deployed Streamlit web app meaning it can be run on any web browser by going to [this page](fdscwip.streamlit.app) without the need to download or intall anything. The deployment is currently set private. So if you need to use this app feel free to contact me to request permission. Otherwise it can be run locally following the steps listed below.
+It is a deployed Streamlit web app meaning it can be run on any web browser by going to `fdscwip.streamlit.app` without the need to download or intall anything. The deployment is currently set private. So if you need to use this app feel free to contact me to request permission. Otherwise it can be run locally following the steps listed below.
 ##  Running the app localy
 First you will need to install python and the needed dependencies. There are plenty of tutorials online on how to do this.
 The dependencies the program uses are the following:
