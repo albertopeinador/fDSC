@@ -3,8 +3,12 @@ import matplotlib.pyplot as plt
 import new_file_loader as ld
 import find_and_int as fai
 import numpy as np
-import scalebar as sc
-import io
+import new_scalebar as sc
+#import io
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
+from matplotlib.colors import rgb2hex
 
 #   Set layout to wide screen
 st.set_page_config(layout="wide")
@@ -23,49 +27,30 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-fig_dpi = 10
+#fig_dpi = 10
 
-
-
-
-#
-#
-
-##   Define slider updaters for the session_state sliders#
-
-  
-#def update_slider_value():
-#    if st.session_state[Ta] != st.session_state["delta"]:
-#        st.session_state[Ta] = st.session_state["delta"]
-#    st.session_state.pop('delta', None)
-#
-#
-#def update_limits_slider():
-#    if st.session_state["regs_" + str(Ta)] != st.session_state["int_limits"]:
-#        st.session_state["regs_" + str(Ta)] = st.session_state["int_limits"]
-#    st.session_state.pop('int_limits', None)
-
+config = {
+  'toImageButtonOptions': { 'height': None, 'width': None, 
+                           'format': 'svg'}
+}
 
 
 #   Define figures and axis for the plots
 
-fig, ax1 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504, 16 / 9 * 2.5*1.968504), dpi = fig_dpi)
-
-fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True, figsize = (2.5*1.968504, 2.5*1.968504), dpi = fig_dpi)
-
+fig = go.Figure()
 
 #   Create the three main columns - one for main controls, one for the plots
 #       and one last one for the integrals plot and some adicional controls
 
-ctr_panel, graf, inte = st.columns([3, 3, 5])
-#load_expander = st.expander('Load controls', expanded = True)
+ctr_panel, graf, inte = st.columns([3, 4, 4])
+
 #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
 #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
 #       rest are self-explanatory
 
 with ctr_panel:
     with st.expander('Load controls', expanded = True):
-        files =st.file_uploader('Upload files', accept_multiple_files = True, type = ['txt'], label_visibility='collapsed')
+        files = st.file_uploader('Upload files', accept_multiple_files = True, type = ['txt'], label_visibility='collapsed')
         eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
         load_start, load_end = st.columns (2)
         if eje_x == 't':
@@ -167,10 +152,7 @@ try:
                 value=st.session_state[f'delta_{selected_key}'], 
             )
 
-            #st.write(st.session_state[f'delta_{selected_key}'], st.session_state[f'slider_value_{selected_keys}'])
-            #selected_keys = st.session_state.selected_key  # Retrieve the selected key
-            #st.session_state[f'delta_{selected_keys}'] = st.session_state[f'slider_value_{selected_keys}']  # Update the key value
-            #st.write(st.session_state[f'delta_{i}'])
+
         #   INTEGRATION LOOP
     for i in temps:
         
@@ -206,35 +188,8 @@ try:
 
     if mode == 'MODIFY':
 
-        #st.write(lower_y, upper_y)
-        #   Clear the axis in case they contain anything from previous runs
-        #   Add modification controls to first column
         with ctr_panel:
-        #    #   Create selectbox to select curve to modify
-        #    Ta = selected_key = st.selectbox(
-        #                "Select Ta to modify",
-        #                [i for i in temps],
-        #                key='selected_key'
-        #            )
 
-        #    #   Define delta for the selected curve, this will be added to the main curve
-        #    #slider_delta = st.slider(
-        #    #    "delta",
-        #    #    min_value=-1.0,
-        #    #    max_value=1.0,
-        #    #    value=st.session_state[Ta],
-        #    #    key='delta',
-        #    #    step=0.01,
-        #    #    on_change=update_slider_value,
-        #    #)
-        #    #st.write(st.session_state)
-        #    st.slider(
-        #        f"Set the value of {selected_key}",
-        #        min_value=-1., max_value=1., 
-        #        key='slider_value', 
-        #        value=st.session_state[f'delta_{selected_key}'], 
-        #        on_change=update_key  # Trigger callback on slider change
-        #    )
             
             #   Check if you want to show difference plot
             show_dif = st.checkbox("Show dif")
@@ -268,75 +223,32 @@ try:
                 max_value=big_data[int(Ta)][0][eje_x].max(),
                 value=st.session_state['regs_' + str(Ta)],
                 key=f"int_limits_{Ta}",
-                #on_change=update_limits_slider,
                 step=(big_data[int(Ta)][0][eje_x].max() - big_data[int(Ta)][0][eje_x].min()) / 500,)
 
             #   Divide into three columns: one for each color to define
             col, ref, shading = st.columns(3)
             #   Create color pickers in each column for each color
 
-        #   Plot curves being modified
-        big_data[int(Ta)][0].plot(
-            x=eje_x,
-            y="Heat Flow",
-            ax=ax1,
-            legend=False,
-            style=main_color,
-            linewidth = 1,
-        )
-        big_data[int(Ta)][1].plot(
-            x=eje_x,
-            y = "Heat Flow",
-            ax=ax1,
-            legend=False,
-            style=ref_color,
-            linewidth=1.1,
-        )
 
-        #   Plot integration limits
-        ax1.axvline(x=st.session_state["regs_" + str(Ta)][0], color="r", linestyle="--")
-        ax1.axvline(x=st.session_state["regs_" + str(Ta)][1], color="r", linestyle="--")
+        color_list = [main_color, ref_color]
+        fill_type = [None, 'tonexty']
+        for i in [0, 1]:
+            fig.add_trace(go.Scatter(x = big_data[int(Ta)][i][eje_x], y = big_data[int(Ta)][i]['Heat Flow'], line_color = color_list[i], fill = fill_type[i], fillcolor = shade_color, mode = 'lines'))
+
+
+            #   Plot integration limits
+            fig.add_vline(x=st.session_state["regs_" + str(Ta)][i], line_dash="dash", line_color = 'red')
 
         #   Plot difference
         if show_dif:
             if len(big_data[int(Ta)][0][eje_x]) == len(dif):
-                ax1.plot(
-                    big_data[int(Ta)][0][eje_x],
-                    float(dif_scale) * dif
-                    + dif_delta
-                    * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
-                    "r",
-                )
-            else:
-                ax1.plot(
-                    big_data[int(Ta)][1][eje_x],
-                    float(dif_scale) * dif
-                    + dif_delta
-                    * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
-                    "r",
-                )
 
-        #   Plot shading
-        if len(big_data[int(Ta)][0]["Heat Flow"]) < len(
-            big_data[int(Ta)][1]["Heat Flow"]
-        ):
-            ax1.fill_between(
-                big_data[int(Ta)][0][eje_x],
-                big_data[int(Ta)][0]["Heat Flow"],
-                big_data[int(Ta)][1]["Heat Flow"].iloc[
-                    : len(big_data[int(Ta)][0]["Heat Flow"])
-                ],
-                color=shade_color,
-            )
-        else:
-            ax1.fill_between(
-                big_data[int(Ta)][1][eje_x],
-                big_data[int(Ta)][0]["Heat Flow"].iloc[
-                    : len(big_data[int(Ta)][1]["Heat Flow"])
-                ],
-                big_data[int(Ta)][1]["Heat Flow"],
-                color=shade_color,
-            )
+                fig.add_trace(go.Scatter(x = big_data[int(Ta)][0][eje_x], y = float(dif_scale) * dif + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()), mode = 'lines'))
+            else:
+
+                fig.add_trace(go.Scatter(x = big_data[int(Ta)][1][eje_x], y = float(dif_scale) * dif + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
+                                         mode = 'lines'))
+ 
     for i in temps:
         try:
             #raise(TypeError)
@@ -346,49 +258,47 @@ try:
             y_clean = y.dropna()
             x_clean = x[~y.isna()]
             ints.append([i, np.trapezoid(y_clean,x_clean)])
-
+            intsdf = pd.DataFrame(ints, columns=['temps', 'enthalpies'])
         except ValueError:
             st.write(i, "Error with int limits", big_data[i][0]["Heat Flow"][indices.min() : indices.max()] - big_data[i][1]["Heat Flow"][indices.min() : indices.max()])
 
         except TypeError:
             with ctr_panel:
                 st.write(i, 'Modify integral limits')
-                #st.session_state[f'new_int_limits_{Ta}'] = [0., 0.]
-                #st.session_state['regs_' + str(Ta)] = st.session_state[f'new_int_limits_{Ta}']
-                #slider_limits = st.slider(
-                #    "Integration limits",
-                #    min_value=big_data[int(Ta)][0][eje_x].min(),
-                #    max_value=big_data[int(Ta)][0][eje_x].max(),
-                #    value=st.session_state['regs_' + str(Ta)],
-                #    key=f"new_int_limits_{Ta}",
-                #    #on_change=update_limits_slider,
-                #    step=(big_data[int(Ta)][0][eje_x].max() - big_data[int(Ta)][0][eje_x].min()) / 500,)
 
     if mode == 'MODIFY':
         lower_y =  min(ints, key=lambda x: x[1])[1] - .5 * max(ints, key=lambda x: x[1])[1]
         upper_y = max(ints, key=lambda x: x[1])[1] + .5 * max(ints, key=lambda x: x[1])[1]
         cmap = plt.get_cmap('Blues')
         colors = np.linspace(0.3, 1, len(temps))
+        #color = []
         for i in range(len(temps)):
             color = cmap(colors[i])
-            ax2.plot(temps[i], ints[i][1], "o", color = color)
+            ints[i].append(str(rgb2hex(color)))
+        intsdf = pd.DataFrame(ints, columns=['temps', 'enthalpies', 'cols'])
+        fig2 = px.scatter(intsdf, x = 'temps', y = 'enthalpies')
+        fig2.update_traces(marker=dict(color=intsdf['cols'], size=10))
+        fig2.update_layout(showlegend=False)
+            #ax2.plot(temps[i], ints[i][1], "o", color = color)
+        yaxis_range = [min(min(big_data[Ta][0]['Heat Flow']), min(big_data[Ta][1]['Heat Flow'])) * .98, max(max(big_data[Ta][0]['Heat Flow']), max(big_data[Ta][1]['Heat Flow'])) * 1.01]
+
     if mode == 'NORMALIZE':
             #   Set plotting limits
         lower_y, upper_y = -0.1, .4
-
+        yaxis_range = [min(min(big_data[temps[-1]][0]['Heat Flow']), min(big_data[temps[-1]][1]['Heat Flow'])) * .98, max(max(big_data[temps[-1]][0]['Heat Flow']), max(big_data[temps[-1]][1]['Heat Flow'])) * 1.01]
         with ctr_panel:
             norm_lims = st.slider('norm limits',
                         min_value=big_data[temps[-1]][1][eje_x].min(),
                         max_value=big_data[temps[-1]][1][eje_x].max(),
                         value =norm_lims_default,
-                        #on_change=update_norm_lims,
                         key = 'norm_lims_key',
                         step = (big_data[temps[-1]][1][eje_x].max()-big_data[temps[-1]][1][eje_x].min()) / 100.)
 
 
-        big_data[temps[-1]][1].plot(x = eje_x, y= 'Heat Flow', ax = ax1, legend = False)
-        ax1.axvline(norm_lims[0], color = 'b', linestyle = '--')
-        ax1.axvline(norm_lims[1], color = 'b', linestyle = '--')
+        fig.add_trace(go.Scatter(x=big_data[temps[-1]][1][eje_x], y = big_data[temps[-1]][1]['Heat Flow'], mode = 'lines'))
+        for i in [0, 1]:
+            fig.add_vline(x = norm_lims[i], line_color = 'blue', line_dash = 'dash')
+
         norm_indices = big_data[temps[-1]][1][eje_x][
             (big_data[temps[-1]][1][eje_x] >= norm_lims[0])
             & (big_data[temps[-1]][1][eje_x] <= norm_lims[1])
@@ -399,13 +309,19 @@ try:
             b = big_data[temps[-1]][1]['Heat Flow'][norm_indices.min()] - m * big_data[temps[-1]][1][eje_x][norm_indices.min()]
             norm_ref = b + m * big_data[temps[-1]][1]['t'][norm_indices.min() : norm_indices.max()]
             norm_value = np.trapezoid(big_data[temps[-1]][1]['Heat Flow'][norm_indices.min() : norm_indices.max()] - norm_ref, big_data[temps[-1]][0]["t"][norm_indices.min() : norm_indices.max()])
-            #st.write(norm_value)
+
             cmap = plt.get_cmap('Blues')
             colors = np.linspace(0.3, 1, len(temps))
+
             for i in range(len(temps)):
                 color = cmap(colors[i])
-                ints[i][1] = ints[i][1] / norm_value
-                ax2.plot(temps[i], ints[i][1], "o", color = color)
+                ints[i].append(str(rgb2hex(color)))
+            intsdf = pd.DataFrame(ints, columns=['temps', 'enthalpies', 'cols'])
+            intsdf['enthalpies'] = intsdf['enthalpies'] / norm_value
+            fig2 = px.scatter(intsdf, x = 'temps', y = 'enthalpies')
+            fig2.update_traces(marker=dict(color=intsdf['cols']))
+            fig2.update_layout(showlegend=False)
+            fig2.update_layout(yaxis_range=[-.1, .4])
         except KeyError:
             st.write('set Tm limits')
            
@@ -428,124 +344,46 @@ try:
             #   Move both main and reference curves down by
             big_data[temps[i]][0]["Heat Flow"] -= dif + margin
             big_data[temps[i]][1]["Heat Flow"] -= dif + margin
-
+        yaxis_range = [min(min(big_data[temps[-1]][0]['Heat Flow']), min(big_data[temps[-1]][1]['Heat Flow'])) * .98, max(max(big_data[temps[0]][0]['Heat Flow']), max(big_data[temps[0]][1]['Heat Flow'])) * 1.01]
         for i in temps:
-            #   Plot the curves
-            big_data[i][0].plot(
-                x=eje_x,
-                y="Heat Flow",
-                ax=ax1,
-                legend=False,
-                style=main_color,
-                linewidth = 1,
-            )
-            big_data[i][1].plot(
-                x=eje_x,
-                y="Heat Flow",
-                ax=ax1,
-                legend=False,
-                style=ref_color,
-                linewidth=1.1,
-            )
-
+            color_list = [main_color, ref_color]
+            fill_type = [None, 'tonexty']
+            text = ['', i]
+            for j in [0, 1]:
+                #text_array = [None] * (len(big_data[i][j][eje_x]) - 1) + [text[j]]  # Only display text at the last point
+                fig.add_trace(go.Scatter(x = big_data[i][j][eje_x], y = big_data[i][j]['Heat Flow'], line_color = color_list[j], fill = fill_type[j], fillcolor = shade_color))
+                fig.add_annotation(
+                        x=big_data[i][j][eje_x].iloc[-1] * 1.05,  # x position of the last point
+                        y=big_data[i][j]['Heat Flow'].iloc[-1],  # y position of the last point
+                        text=text[j],  # The text you want to display
+                        showarrow=False,  # Optionally show an arrow pointing to the last point
+                        arrowhead=2,  # Customize the arrowhead
+                        ax=20, ay=-20,  # Adjust the position of the annotation
+                        font=dict(size=15, color="black")  # Customize the appearance of the text
+                    )
             #   Plot the labels on each curve
-            ax1.text(
-                big_data[i][0][eje_x].iloc[-1] *1.01,
-                big_data[i][0]["Heat Flow"].iloc[-1],
-                i,
-                fontsize = 10,
-                fontweight = 'book'
-            )
-
-            # Plot the shading
-            if len(big_data[i][0]["Heat Flow"]) < len(big_data[i][1]["Heat Flow"]):
-                ax1.fill_between(
-                    big_data[i][0][eje_x],
-                    big_data[i][0]["Heat Flow"],
-                    big_data[i][1]["Heat Flow"].iloc[
-                        : len(big_data[i][0]["Heat Flow"])
-                    ],
-                    color=shade_color,
-                )
-            else:
-                ax1.fill_between(
-                    big_data[i][1][eje_x],
-                    big_data[i][0]["Heat Flow"].iloc[
-                        : len(big_data[i][1]["Heat Flow"])
-                    ],
-                    big_data[i][1]["Heat Flow"],
-                    color=shade_color,
-                )
-
-    #   Clear up the graph, remove borders and y axis
-    ax1.spines["top"].set_visible(False)
-    ax1.spines["left"].set_visible(False)
-    ax1.spines["right"].set_visible(False)
- 
-
-    scalebar = sc.add_scalebar(scalebar_scale, ax1, matchx = False, hidex = False, )
-    buffer1 = io.BytesIO()
-    fig.savefig(buffer1, format='pdf')
-    buffer1.seek(0)  # Move the cursor to the start of the buffer
+            fig.update_traces(textposition='middle right')
+            
     if mode != 'FULL':
+        
         with inte:
-            with st.expander('Integral plot limits', expanded = True):
+            fig2.update_traces(marker=dict(color=intsdf['cols'], size=10))
+            fig2.update_layout(showlegend=False)
+            st.plotly_chart(fig2, **{'config':config})
+            _, dwl_ent, _ = st.columns([.7, 1, .7])
 
-                # Further divide the space into two columns
-                low, up = st.columns(2)
-                #   In one column get a text input for the lower plotting limits of integral plot
-                with low:
-                    lower = st.text_input("Lower Ta limit", key="lower", value="-100")
-                    #lower_y = st.text_input("Lower H limit", key="lower_y", value = '0')
-                #   In the other for the upper limits
-                with up:
-                    upper = st.text_input("Upper Ta limit", key="upper", value="300")
-                    #upper_y = st.text_input("Upper H limit", key="upper_y", value='0.004')
-        ax2.set_xlim((int(lower), int(upper)))
-        ax2.set_ylim((float(lower_y), float(upper_y)))  
-        ax2.grid(True, axis='x', linestyle = '-.', color = '#eeeeee')
-        if mode == "NORMALIZE":
-            ax2.set_ylabel(r'$\int_{peak}(Q-Q_{ref})dt\ / \ \sigma_{T_m}$')
-        else:
-            ax2.set_ylabel(r'$\int_{peak}(Q-Q_{ref})dt$')
-        ax2.set_xlabel(r'$T_a\ /\ ^{\degree}C$')
-        ax2.ticklabel_format(axis = 'y', style='sci', scilimits = (-2, 2))
-                #   Show integral plot
-
-        buffer = io.BytesIO()
-        fig2.savefig(buffer, format='pdf')
-        buffer.seek(0)
-        with inte:
-            _, plot_inte, _ = st.columns ([.5, 2, .5])
-            with plot_inte:
-                st.pyplot(fig2, use_container_width=True)
-            _, dwl_ent, name, button, _ = st.columns([.5, .5, 1, .5, .5])
-
-            result_string = '\n'.join(f"{tup[0]}\t{tup[1]}" for tup in ints)
+            result_string = '\n'.join(f"{row['temps']}\t{row['enthalpies']}" for index, row in intsdf.iterrows())
             with dwl_ent:
                 st.download_button('download enthalpies', result_string)
-            with name:
-                inte_name = st.text_input('Save as:', label_visibility='collapsed', placeholder='Integral plot name')
-            with button:
-                st.download_button(
-                        label="Download Integral Plot",
-                        data=buffer,
-                        file_name=inte_name + '.pdf',
-                        mime="image/pdf"
-                        )        
     #   Show main graph
     with graf:
-        st.pyplot(fig)
-        name, button = st.columns(2)
-        with name:
-            plot_name = st.text_input('Save plot as:', label_visibility='collapsed',  placeholder='Plot name')
-        with button:
-            st.download_button(
-                    label="Download Plot",
-                    data=buffer1,
-                    file_name=plot_name + '.pdf',
-                    mime="image/pdf"
-                    )      
+        xaxis_range = [load_begin * .98, load_fin *1.05]
+        sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
+        fig.update_layout(showlegend=False, height = 700, margin=dict(l=10, r=10, t=10, b=10),
+                    xaxis = dict(visible=True),
+                    yaxis = dict(visible=False),
+                    xaxis_title=eje_x)
+        st.plotly_chart(fig, **{'config':config})
 except IndexError:
     with graf:
         st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
