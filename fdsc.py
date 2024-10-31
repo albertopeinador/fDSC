@@ -163,62 +163,35 @@ try:
                 key=f"slider_value_{selected_key}",
                 value=st.session_state[f"delta_{selected_key}"],
             )
-
+    if mode != 'FULL':
         #   INTEGRATION LOOP
-    for i in temps:
+        for i in temps:
 
-        #   Apply delta modification to all curves
-        big_data[i][0]["Heat Flow"] += (st.session_state[f"delta_{i}"] / 10) * big_data[
-            i
-        ][0]["Heat Flow"].max()
+            #   Apply delta modification to all curves
+            big_data[i][0]["Heat Flow"] += (st.session_state[f"delta_{i}"] / 10) * big_data[
+                i
+            ][0]["Heat Flow"].max()
 
-        if "x_change_check" not in st.session_state:
-            st.session_state["x_change_check"] = "easteregg"
-        #   Initialize session_state with the auto-generated limits
-        regs_label = "regs_" + str(i)
-        if (
-            f"int_limits_{i}" not in st.session_state
-            or st.session_state["x_change_check"] != eje_x
-        ):
-            #   Find auto-limits for integration
-            left, right = fai.find_int_region(
-                big_data[i],
-                int_dif_th
-                * (big_data[i][0]["Heat Flow"] - big_data[i][1]["Heat Flow"]).max(),
-                "Heat Flow",
-            )
-            st.session_state[f"int_limits_{i}"] = [
-                big_data[i][0][eje_x].iloc[left],
-                big_data[i][0][eje_x].iloc[right],
-            ]
-            if i == temps[-1]:
-                st.session_state["x_change_check"] = eje_x
-        #   Find indices of integration limit in the DataFrame
-        indices = big_data[i][0][eje_x][
-            (big_data[i][0][eje_x] >= st.session_state[f"int_limits_{i}"][0])
-            & (big_data[i][0][eje_x] <= st.session_state[f"int_limits_{i}"][1])
-        ].index
-        #stt_idx = big_data[i][0][eje_x].index[0]
-        #st.write(i, indices)
-
-
-        start_idx = big_data[i][0].index[0]
-        #start_idx_ref = big_data[i][1].index[0]
-        #st.write(i, indices)
-        #st.write('minimum', indices.min(), big_data[i][0].iloc[indices.min() - start_idx],'maximum', big_data[i][0].iloc[indices.max() - start_idx])
-        y = (big_data[i][0]["Heat Flow"]
-            - big_data[i][1]["Heat Flow"]).iloc[indices.min()-start_idx: indices.max()-start_idx]
-        #st.write(i, y.max())
-        x = big_data[i][0]["t"].iloc[indices.min()-start_idx: indices.max()-start_idx]
-        nan_indices = y.index[y.isna()].tolist()
-        y_clean = y.dropna()
-        x_clean = x[~y.isna()]
-        #st.write(i, y_clean)
-        ints.append([i, np.trapezoid(y_clean, x_clean)])
-        intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
-
-    if mode == "MODIFY":
-
+            if "x_change_check" not in st.session_state:
+                st.session_state["x_change_check"] = "easteregg"
+            #   Initialize session_state with the auto-generated limits
+            regs_label = "regs_" + str(i)
+            if (regs_label not in st.session_state or st.session_state["x_change_check"] != eje_x):
+                #   Find auto-limits for integration
+                left, right = fai.find_int_region(
+                    big_data[i],
+                    int_dif_th
+                    * (big_data[i][0]["Heat Flow"] - big_data[i][1]["Heat Flow"]).max(),
+                    "Heat Flow",
+                )
+                st.session_state["regs_" + str(i)] = [
+                    big_data[i][0][eje_x].iloc[left],
+                    big_data[i][0][eje_x].iloc[right],
+                ]
+                if i == temps[-1]:
+                    st.session_state["x_change_check"] = eje_x
+            #st.session_state[f"int_limits_{i}"] = st.session_state["regs_" + str(i)]
+            #st.session_state["regs_" + str(i)] = st.session_state[f"int_limits_{i}"]
         with ctr_panel:
 
             #   Check if you want to show difference plot
@@ -243,23 +216,44 @@ try:
             #   Create sliders for integration limits
 
             #   Keep in mind time scale is much smaller and thus require smaller step - this as a whole is annoying
-            st.session_state["regs_" + str(Ta)] = st.session_state[f"int_limits_{Ta}"]
-            slider_limits = st.slider(
+
+            #   Divide into three columns: one for each color to define
+            col, ref, shading = st.columns(3)
+            #   Create color pickers in each column for each color
+        if f'new_lims_{Ta}' not in st.session_state:
+            st.session_state[f'new_lims_{Ta}'] = st.session_state["regs_" + str(Ta)]
+        st.session_state["regs_" + str(Ta)] = st.session_state[f'new_lims_{Ta}']
+        with ctr_panel:
+                        slider_limits = st.slider(
                 "Integration limits",
                 min_value=big_data[int(Ta)][0][eje_x].min(),
                 max_value=big_data[int(Ta)][0][eje_x].max(),
                 value=st.session_state["regs_" + str(Ta)],
-                key=f"int_limits_{Ta}",
+                key=f'new_lims_{Ta}',
                 step=(
                     big_data[int(Ta)][0][eje_x].max()
                     - big_data[int(Ta)][0][eje_x].min()
                 )
                 / 500,
             )
-
-            #   Divide into three columns: one for each color to define
-            col, ref, shading = st.columns(3)
-            #   Create color pickers in each column for each color
+        
+        for i in temps:
+                    #   Find indices of integration limit in the DataFrame
+            indices = big_data[i][0][eje_x][
+                (big_data[i][0][eje_x] >= st.session_state["regs_" + str(i)][0])
+                & (big_data[i][0][eje_x] <= st.session_state["regs_" + str(i)][1])
+            ].index
+            start_idx = big_data[i][0].index[0]
+            y = (big_data[i][0]["Heat Flow"]
+                - big_data[i][1]["Heat Flow"]).iloc[indices.min()-start_idx: indices.max()-start_idx]
+            #st.write(i, y.max())
+            x = big_data[i][0]["t"].iloc[indices.min()-start_idx: indices.max()-start_idx]
+            nan_indices = y.index[y.isna()].tolist()
+            y_clean = y.dropna()
+            x_clean = x[~y.isna()]
+            #st.write(i, y_clean)
+            ints.append([i, np.trapezoid(y_clean, x_clean)])
+            intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
 
         color_list = [main_color, ref_color]
         fill_type = [None, "tonexty"]
@@ -316,6 +310,7 @@ try:
         #except TypeError:
         #    with ctr_panel:
         #        st.write(i, "Modify integral limits")
+
 
     if mode == "MODIFY":
         lower_y = (
@@ -542,6 +537,6 @@ except TypeError:
                 st.write("Ta = ", key)
             if df2 is None:
                 st.write("Ta = ", key, "_ref")
-except KeyError:
-    with graf:
-        st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
+#except KeyError:
+#    with graf:
+#        st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
