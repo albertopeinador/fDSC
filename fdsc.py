@@ -128,14 +128,12 @@ try:
     )
 
     #   Initialize session state for each Ta to store the delta
-    for i in temps:
+    #for i in temps:
         # key_name = f'delta_{i}'
         # if key_name not in st.session_state:
         #    st.session_state[key_name] = 0.  # Initial value for each key
-        if f"delta_{i}" not in st.session_state:
-            st.session_state[f"delta_{i}"] = 0.0  # Default initial value
-        if f"slider_value_{i}" not in st.session_state:
-            st.session_state[f"slider_value_{i}"] = 0.0
+        #if f"slider_value_{i}" not in st.session_state:
+        #    st.session_state[f"slider_value_{i}"] = 0.0
     if "selected_key" not in st.session_state:
         st.session_state.selected_key = temps[0]
 
@@ -145,24 +143,38 @@ try:
     #   Create MODIFY mode checkbox
     with ctr_panel:
         mode = st.radio("mode", ["FULL", "MODIFY", "NORMALIZE"], horizontal=True)
-        if mode == "MODIFY":
-            #   Create selectbox to select curve to modify
-            selected_keys = st.session_state.selected_key  # Retrieve the selected key
-            st.session_state[f"delta_{selected_keys}"] = st.session_state[
-                f"slider_value_{selected_keys}"
-            ]  # Update the key value
-
+    if mode == "MODIFY":
+        #   Create selectbox to select curve to modify
+        #selected_keys = st.session_state.selected_key  # Retrieve the selected key
+        with ctr_panel:
             Ta = selected_key = st.selectbox(
                 "Select Ta to modify", [i for i in temps], key="selected_key"
             )
 
-            st.slider(
-                f"Set the delta of Ta = {selected_key}",
+        for i in temps:
+            if f"new_delta_{i}" not in st.session_state:
+                st.session_state[f"new_delta_{i}"] = 0.
+            if f"delta_{i}" not in st.session_state:
+                st.session_state[f"delta_{i}"] = 0.
+        if f'has_changed_{Ta}' not in st.session_state:
+            st.session_state[f'has_changed_{Ta}'] = True
+        if st.session_state[f"new_delta_{Ta}"] != 0.:
+            st.session_state[f"delta_{Ta}"] = st.session_state[f"new_delta_{Ta}"]
+            st.session_state[f'has_changed_{Ta}'] = False
+        elif st.session_state[f'has_changed_{Ta}']:
+            st.session_state[f"delta_{Ta}"] = st.session_state[f"new_delta_{Ta}"]
+
+        with ctr_panel:
+            current_delta = st.slider(
+                f"Set the delta of Ta = {Ta}",
                 min_value=-1.0,
                 max_value=1.0,
-                key=f"slider_value_{selected_key}",
-                value=st.session_state[f"delta_{selected_key}"],
+                key=f"new_delta_{Ta}",
+                value=st.session_state[f"delta_{Ta}"],
+                step = .01
             )
+            #st.write(st.session_state[f"delta_{Ta}"])
+
     if mode != 'FULL':
         #   INTEGRATION LOOP
         for i in temps:
@@ -213,18 +225,22 @@ try:
             #   Calculate difference between curves
             # st.write(Ta, type(Ta))
             dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
-            #   Create sliders for integration limits
 
-            #   Keep in mind time scale is much smaller and thus require smaller step - this as a whole is annoying
 
             #   Divide into three columns: one for each color to define
             col, ref, shading = st.columns(3)
             #   Create color pickers in each column for each color
+        
+        
+        
         if f'new_lims_{Ta}' not in st.session_state:
             st.session_state[f'new_lims_{Ta}'] = st.session_state["regs_" + str(Ta)]
+
         st.session_state["regs_" + str(Ta)] = st.session_state[f'new_lims_{Ta}']
+
         with ctr_panel:
-                        slider_limits = st.slider(
+
+            slider_limits = st.slider(
                 "Integration limits",
                 min_value=big_data[int(Ta)][0][eje_x].min(),
                 max_value=big_data[int(Ta)][0][eje_x].max(),
@@ -246,12 +262,12 @@ try:
             start_idx = big_data[i][0].index[0]
             y = (big_data[i][0]["Heat Flow"]
                 - big_data[i][1]["Heat Flow"]).iloc[indices.min()-start_idx: indices.max()-start_idx]
-            #st.write(i, y.max())
+
             x = big_data[i][0]["t"].iloc[indices.min()-start_idx: indices.max()-start_idx]
             nan_indices = y.index[y.isna()].tolist()
             y_clean = y.dropna()
             x_clean = x[~y.isna()]
-            #st.write(i, y_clean)
+
             ints.append([i, np.trapezoid(y_clean, x_clean)])
             intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
 
