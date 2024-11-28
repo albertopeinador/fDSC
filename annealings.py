@@ -539,7 +539,7 @@ def annealings():
         fig.update_layout(
             showlegend=False,
             height=700,
-            width = 200,
+            width = 400,
             margin=dict(l=10, r=10, t=10, b=10),
             xaxis=dict(visible=True),
             yaxis=dict(visible=False),
