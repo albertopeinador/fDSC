@@ -227,7 +227,8 @@ def annealings():
                         )
                 #   Calculate difference between curves
                 # st.write(Ta, type(Ta))
-                dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
+                if mode == 'MODIFY':
+                    dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
 
 
                 #   Divide into three columns: one for each color to define
