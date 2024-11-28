@@ -271,7 +271,7 @@ def annealings():
                 y_clean = y.dropna()
                 x_clean = x[~y.isna()]
 
-                ints.append([i, np.trapezoid(y_clean, x_clean)])
+                ints.append([i, np.trapz(y_clean, x_clean)])
                 intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
 
             color_list = [main_color, ref_color]
