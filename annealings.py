@@ -288,18 +288,18 @@ def annealings():
                             mode="lines",
                         )
                     )
-    
+
                     #   Plot integration limits
                     fig.add_vline(
                         x=st.session_state["regs_" + str(Ta)][i],
                         line_dash="dash",
                         line_color="red",
                     )
-    
+
                 #   Plot difference
                 if show_dif:
                     if len(big_data[int(Ta)][0][eje_x]) == len(dif):
-                    
+
                         fig.add_trace(
                             go.Scatter(
                                 x=big_data[int(Ta)][0][eje_x],
@@ -309,7 +309,7 @@ def annealings():
                             )
                         )
                     else:
-                    
+
                         fig.add_trace(
                             go.Scatter(
                                 x=big_data[int(Ta)][1][eje_x],
@@ -424,7 +424,7 @@ def annealings():
                     * big_data[temps[-1]][1]["t"][norm_indices.min() - start_index: norm_indices.max() - start_index]
                 )
 
-                norm_value = np.trapezoid(
+                norm_value = np.trapz(
                     big_data[temps[-1]][1]["Heat Flow"][
                         norm_indices.min() - start_index : norm_indices.max() - start_index
                     ]
