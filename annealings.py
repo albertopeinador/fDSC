@@ -227,8 +227,6 @@ def annealings():
                         )
                 #   Calculate difference between curves
                 # st.write(Ta, type(Ta))
-                if mode == 'MODIFY':
-                    dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
 
 
                 #   Divide into three columns: one for each color to define
@@ -236,26 +234,27 @@ def annealings():
                 #   Create color pickers in each column for each color
             
             
-            
-            if f'new_lims_{Ta}' not in st.session_state:
-                st.session_state[f'new_lims_{Ta}'] = st.session_state["regs_" + str(Ta)]
+            if mode == 'MODIFY':
+                dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
+                if f'new_lims_{Ta}' not in st.session_state:
+                    st.session_state[f'new_lims_{Ta}'] = st.session_state["regs_" + str(Ta)]
 
-            st.session_state["regs_" + str(Ta)] = st.session_state[f'new_lims_{Ta}']
+                st.session_state["regs_" + str(Ta)] = st.session_state[f'new_lims_{Ta}']
 
-            with ctr_panel:
+                with ctr_panel:
 
-                slider_limits = st.slider(
-                    "Integration limits",
-                    min_value=big_data[int(Ta)][0][eje_x].min(),
-                    max_value=big_data[int(Ta)][0][eje_x].max(),
-                    value=st.session_state["regs_" + str(Ta)],
-                    key=f'new_lims_{Ta}',
-                    step=(
-                        big_data[int(Ta)][0][eje_x].max()
-                        - big_data[int(Ta)][0][eje_x].min()
+                    slider_limits = st.slider(
+                        "Integration limits",
+                        min_value=big_data[int(Ta)][0][eje_x].min(),
+                        max_value=big_data[int(Ta)][0][eje_x].max(),
+                        value=st.session_state["regs_" + str(Ta)],
+                        key=f'new_lims_{Ta}',
+                        step=(
+                            big_data[int(Ta)][0][eje_x].max()
+                            - big_data[int(Ta)][0][eje_x].min()
+                        )
+                        / 500,
                     )
-                    / 500,
-                )
             
             for i in temps:
                         #   Find indices of integration limit in the DataFrame
