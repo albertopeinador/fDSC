@@ -2,4 +2,4 @@ import streamlit as st
 
 
 def kinetics():
-    st.write('Comming soon!!')
+    st.write('¡¡Comming soon!!')
