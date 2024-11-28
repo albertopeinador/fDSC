@@ -1,2 +1,3 @@
 matplotlib
 plotly
+streamlit_navigation_bar
