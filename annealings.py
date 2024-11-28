@@ -523,7 +523,7 @@ def annealings():
             with inte:
                 fig2.update_traces(marker=dict(color=intsdf["cols"], size=10))
                 fig2.update_layout(showlegend=False)
-                st.plotly_chart(fig2, **{"config": config})
+                st.plotly_chart(fig2, use_container_width = True, **{"config": config})
                 _, dwl_ent, _ = st.columns([0.7, 1, 0.7])
 
                 result_string = "\n".join(
@@ -539,14 +539,13 @@ def annealings():
         fig.update_layout(
             showlegend=False,
             height=700,
-            width = 400,
             margin=dict(l=10, r=10, t=10, b=10),
             xaxis=dict(visible=True),
             yaxis=dict(visible=False),
             xaxis_title=eje_x,
         )
         with graf:
-            st.plotly_chart(fig, **{"config": config})
+            st.plotly_chart(fig, use_container_width = True, **{"config": config})
     except IndexError:
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
