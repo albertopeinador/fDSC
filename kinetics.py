@@ -2,4 +2,7 @@ import streamlit as st
 
 
 def kinetics():
-    st.write('¡¡Comming soon!!')
+    og_file = st.file_uploader('Upload Files',
+                               accept_multiple_files = False,
+                               label_visibility = 'collapsed')
+    

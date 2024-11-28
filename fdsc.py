@@ -2,6 +2,7 @@ import streamlit as st
 from streamlit_navigation_bar import st_navbar
 import kinetics
 import annealings
+import welcome
 
 st.set_page_config(layout="wide")
 
@@ -12,7 +13,7 @@ selected = st_navbar(options)
 
 if selected is not None:
     if selected == 'Welcome':
-        st.write('Welcome to our data processing program for flash diferencial scanning calorimetry (or fast diferencia calorimetry).\nUp top you will find different tabs for the different types of measurements we currently support (most are WIP still). You can see below instructions and details on how to use these tools and what they are capable of.')
+        welcome.welcome()
     elif selected == 'kinetics':
         kinetics.kinetics()
     
