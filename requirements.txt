@@ -1,3 +1,4 @@
+streamlit==1.33
 matplotlib
 plotly
 streamlit_navigation_bar
