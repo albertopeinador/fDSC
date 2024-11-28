@@ -41,7 +41,7 @@ def annealings():
     #   Create the three main columns - one for main controls, one for the plots
     #       and one last one for the integrals plot and some adicional controls
 
-    ctr_panel, graf, inte = st.columns(3)
+    ctr_panel, graf, inte = st.columns([3, 4, 4])
 
     #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
     #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
@@ -538,8 +538,9 @@ def annealings():
         sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
         fig.update_layout(
             showlegend=False,
-            #height=700,
-            #margin=dict(l=10, r=10, t=10, b=10),
+            height=700,
+            width = 200,
+            margin=dict(l=10, r=10, t=10, b=10),
             xaxis=dict(visible=True),
             yaxis=dict(visible=False),
             xaxis_title=eje_x,
