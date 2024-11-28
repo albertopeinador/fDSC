@@ -1,3 +1,7 @@
 matplotlib
 plotly
+<<<<<<< HEAD
 streamlit_navigation_bar
+=======
+streamlit_navigation_bar
+>>>>>>> refs/remotes/origin/main
