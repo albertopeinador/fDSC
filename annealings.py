@@ -276,47 +276,48 @@ def annealings():
 
             color_list = [main_color, ref_color]
             fill_type = [None, "tonexty"]
-            for i in [0, 1]:
-                fig.add_trace(
-                    go.Scatter(
-                        x=big_data[int(Ta)][i][eje_x],
-                        y=big_data[int(Ta)][i]["Heat Flow"],
-                        line_color=color_list[i],
-                        fill=fill_type[i],
-                        fillcolor=shade_color,
-                        mode="lines",
-                    )
-                )
-
-                #   Plot integration limits
-                fig.add_vline(
-                    x=st.session_state["regs_" + str(Ta)][i],
-                    line_dash="dash",
-                    line_color="red",
-                )
-
-            #   Plot difference
-            if show_dif:
-                if len(big_data[int(Ta)][0][eje_x]) == len(dif):
-
+            if mode == 'MODIFY':
+                for i in [0, 1]:
                     fig.add_trace(
                         go.Scatter(
-                            x=big_data[int(Ta)][0][eje_x],
-                            y=float(dif_scale) * dif
-                            + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
+                            x=big_data[int(Ta)][i][eje_x],
+                            y=big_data[int(Ta)][i]["Heat Flow"],
+                            line_color=color_list[i],
+                            fill=fill_type[i],
+                            fillcolor=shade_color,
                             mode="lines",
                         )
                     )
-                else:
-
-                    fig.add_trace(
-                        go.Scatter(
-                            x=big_data[int(Ta)][1][eje_x],
-                            y=float(dif_scale) * dif
-                            + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
-                            mode="lines",
-                        )
+    
+                    #   Plot integration limits
+                    fig.add_vline(
+                        x=st.session_state["regs_" + str(Ta)][i],
+                        line_dash="dash",
+                        line_color="red",
                     )
+    
+                #   Plot difference
+                if show_dif:
+                    if len(big_data[int(Ta)][0][eje_x]) == len(dif):
+                    
+                        fig.add_trace(
+                            go.Scatter(
+                                x=big_data[int(Ta)][0][eje_x],
+                                y=float(dif_scale) * dif
+                                + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
+                                mode="lines",
+                            )
+                        )
+                    else:
+                    
+                        fig.add_trace(
+                            go.Scatter(
+                                x=big_data[int(Ta)][1][eje_x],
+                                y=float(dif_scale) * dif
+                                + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
+                                mode="lines",
+                            )
+                        )
 
             #except ValueError:
             #    st.write(
