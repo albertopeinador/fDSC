@@ -14,8 +14,7 @@ selected = st_navbar(options)
 if selected is not None:
     if selected == 'Welcome':
         welcome.welcome()
-    elif selected == 'kinetics':
+    elif selected == 'Kinetics':
         kinetics.kinetics()
-    
     elif selected == 'Annealings':
         annealings.annealings()
