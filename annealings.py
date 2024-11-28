@@ -41,7 +41,7 @@ def annealings():
     #   Create the three main columns - one for main controls, one for the plots
     #       and one last one for the integrals plot and some adicional controls
 
-    ctr_panel, graf, inte = st.columns([3, 4, 4])
+    ctr_panel, graf, inte = st.columns(3)
 
     #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
     #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
@@ -533,17 +533,18 @@ def annealings():
                 with dwl_ent:
                     st.download_button("download enthalpies", result_string)
         #   Show main graph
+        
+        xaxis_range = [load_begin * 0.98, load_fin * 1.05]
+        sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
+        fig.update_layout(
+            showlegend=False,
+            #height=700,
+            #margin=dict(l=10, r=10, t=10, b=10),
+            xaxis=dict(visible=True),
+            yaxis=dict(visible=False),
+            xaxis_title=eje_x,
+        )
         with graf:
-            xaxis_range = [load_begin * 0.98, load_fin * 1.05]
-            sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
-            fig.update_layout(
-                showlegend=False,
-                height=700,
-                margin=dict(l=10, r=10, t=10, b=10),
-                xaxis=dict(visible=True),
-                yaxis=dict(visible=False),
-                xaxis_title=eje_x,
-            )
             st.plotly_chart(fig, **{"config": config})
     except IndexError:
         with graf:
