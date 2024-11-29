@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly as pt
+import plotly.graph_objects as go
 import csv
 from io import StringIO
 
@@ -26,8 +27,8 @@ def count_columns(file):
 def get_names(og_file):
     names = list([f'curva {i}' for i in range(count_columns(og_file))])
     names[0] = 'time'
-    tableinput = st.toggle('As curveble')
-    if tableinput:
+    tableinput = st.toggle('Custom names')
+    if  not tableinput:
         #st.write(names)
         editnames = pd.DataFrame([names], columns=names)
         newnames = st.data_editor(editnames, use_container_width=True, hide_index = True)
@@ -49,6 +50,8 @@ def read_kinetics(og_file, edited_names):
 
 
 def kinetics(df):
+    currentfig = go.Figure()
+
     sub_names = []
     integraciones = []
     left, right = st.columns([2, 3])
@@ -75,12 +78,14 @@ def kinetics(df):
     elif st.session_state[f'has_changed_{curve}']:
         st.session_state[f"{curve} rightlim"] = st.session_state[f"{curve} rlim"]
     with left:
-        current_delta = st.number_input(
+        st.number_input(
             f"Set integration limit of curve = {curve}",
             key=f"{curve} rlim",
             value=st.session_state[f"{curve} rightlim"],
         )
-        
-        st.write(st.session_state[f'{curve} rightlim'])
+    currentfig.add_trace(go.Scatter(x = df[names[0]], y = df[f'{curve} substracted']))
+    with right:
+        st.plotly_chart(currentfig, use_container_width = True)
+        #st.write(f'Actual number: %d' % st.session_state[f"{curve} rightlim"])
 
         
