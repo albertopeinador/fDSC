@@ -15,19 +15,23 @@ if selected is not None:
     if selected == 'Welcome':
         welcome.welcome()
     elif selected == 'Kinetics':
-        with st.expander('Load Data'):
+        with st.expander('Load Data', expanded = True):
             og_file = st.file_uploader('Upload Files',
                                        accept_multiple_files = False,
                                        label_visibility = 'collapsed',
                                        type = ['csv'])
+            if og_file is not None:
+                try:
+                    curvas = kinetics.get_names(og_file)
+                except TypeError:
+                    st.write('Upload file please')
+        if og_file is not None:
             try:
-                curvas = kinetics.get_names(og_file)
-            except TypeError:
-                st.write('Upload file please')
-        try:
-            df = kinetics.read_kinetics(og_file, curvas)
-            kinetics.kinetics(df, og_file.name)
-        except NameError:
-            st.write('Enter curve names or use default by switching \'As table\' toggle on.')
+                df = kinetics.read_kinetics(og_file, curvas)
+                kinetics.kinetics(df, og_file.name)
+            except NameError:
+                st.write('Enter curve names or use default by switching \'As table\' toggle on.')
+        else:
+            st.write('Please Load File')
     elif selected == 'Annealings':
         annealings.annealings()
