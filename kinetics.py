@@ -115,7 +115,7 @@ def kinetics(df, filename):   #Proper processing
 
         # –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––   #
     
-    with left:
+    with left:      #   Number input for right integration limit
         n_inpt, dwld = st.columns(2)
         with n_inpt:
             st.number_input(
@@ -127,55 +127,74 @@ def kinetics(df, filename):   #Proper processing
             )
 
     for i in names[1:-1]:
-
-        if f't_index {i}' not in st.session_state:
+            #   Initialize limit indexes
+        if f't_index {i}' not in st.session_state:  
             st.session_state[f't_index {i}'] = df[names[0]].where(
                 df[names[0]] >= st.session_state[f"{i} rightlim"]
                 ).first_valid_index()
+            #   Update limit indexes
         st.session_state[f't_index {i}'] = df[names[0]].where(
                 df[names[0]] >= st.session_state[f"{i} rightlim"]
                 ).first_valid_index()
         
-        end = min(len(df[names[0]]) - 1, st.session_state[f't_index {i}'])
+        end = min(len(df[names[0]]) - 1, st.session_state[f't_index {i}']) #Making sure not to go over last data point
+
+            #   Initialize baseline value
         if f'baseline {i}' not in st.session_state:
             st.session_state[f'baseline {i}'] = df[f'{i} subtracted'].iloc[end]
+            #   Update baseline value
         st.session_state[f'baseline {i}'] = df[f'{i} subtracted'].iloc[end]
         
-        
-        #st.write(st.session_state[f'baseline {i}'])
+        #   Left limit detection condition:
         condicion = df[f'{i} subtracted'].iloc[:end] - st.session_state[f'baseline {i}'] < 0
         
+        
+        #   Initialize left limit index value
         if f'start {i}' not in st.session_state:
             st.session_state[f'start {i}'] = df[f'{i} subtracted'].iloc[:end].where(condicion).last_valid_index()
+        #   Update left limit index value        
         st.session_state[f'start {i}'] = df[f'{i} subtracted'].iloc[:end].where(condicion).last_valid_index()
         
+        
+        #   Initialize subtracted curve value in integration interval
         if f'signal_segment {i}' not in st.session_state:
             st.session_state[f'signal_segment {i}'] = df[f'{i} subtracted'].iloc[st.session_state[f'start {i}']:end+1]
+        #   Update subtracted curve value in integration interval
         st.session_state[f'signal_segment {i}'] = df[f'{i} subtracted'].iloc[st.session_state[f'start {i}']:end+1]
         
+
+        #   Initialize values of time in integration interval
         if f'time_segment {i}' not in st.session_state:
             st.session_state[f'time_segment {i}'] = df[names[0]].iloc[st.session_state[f'start {i}']:end+1]
+        #   Update values of time in integration interval
         st.session_state[f'time_segment {i}'] = df[names[0]].iloc[st.session_state[f'start {i}']:end+1]
     
-
+        #   Calculate and store integral
         area_max_peak = np.trapz(st.session_state[f'signal_segment {i}'] - st.session_state[f'baseline {i}'], st.session_state[f'time_segment {i}'])
         integraciones.append(area_max_peak)
-        #st.write([st.session_state[f'baseline {i}']]*len(st.session_state[f'time_segment {curve}']))
 
+
+    #   Add curve (only the integration interval) to the plot. Only for the shading, line left transparent
     currentfig.add_trace(go.Scatter(x = st.session_state[f'time_segment {curve}'],
                                     y = st.session_state[f'signal_segment {curve}'],
                                     showlegend = False,
                                     line = dict(color='rgba(0,0,0,0)')))
     
+    #   Add baseline (only the integration interval) to the plot. Only for the shading, line left transparent
+    #        fill command in here!
     currentfig.add_trace(go.Scatter(x = st.session_state[f'time_segment {curve}'],
-                                    y = [st.session_state[f'baseline {curve}']]*len(st.session_state[f'time_segment {curve}'])
-                                    , fill = 'tonexty',
+                                    y = [st.session_state[f'baseline {curve}']]*len(st.session_state[f'time_segment {curve}']),
+                                    fill = 'tonexty',
                                     fillcolor = '#cccccc',
                                     showlegend = False,
                                     line = dict(color='rgba(0,0,0,0)')))
+    
+    #   Add full subtracted curve to plot
     currentfig.add_trace(go.Scatter(x = df[names[0]], y = df[f'{curve} subtracted'],
                                     name = f'{curve}\n subtracted',
                                     line = dict(color = '#08a5b9', width = 3)))
+    
+    #   Format and button to save data as .csv
     integrals_df = pd.DataFrame(list(reversed(integraciones[:])), index = list(reversed([i.replace(',', '.') for i in names[1:-1]])), columns = ['Integral'])
     integrals_df.index.name = 'Curve'
     intes_csv = integrals_df.to_csv()
@@ -186,7 +205,9 @@ def kinetics(df, filename):   #Proper processing
                            use_container_width = True,
                            )
     
-    try:
+    try:    #   To create integrals plot, error handling for str names instead of floats
+        
+        #   Colormaps and stuff for pretty graphs
         cmap = plt.get_cmap("Blues")
         colors = np.linspace(0.3, 1, len(names[1:-1]))
         cols = []
@@ -194,23 +215,27 @@ def kinetics(df, filename):   #Proper processing
             color = cmap(colors[i])
             cols.append(str(rgb2hex(color)))
 
+        #   Format the data arrays properly
+        inte_x = list([float(i.replace(',', '.')) for i in names[1:-1]])
+        inte_y = integraciones[:]
 
-        inte_x = list(reversed([float(i.replace(',', '.')) for i in names[1:-1]]))
-    
-        inte_y = list(reversed(integraciones[:]))
+        #   Create integrals plot
         intes = px.scatter(x = inte_x, y = inte_y, log_x = True)
+        #   Make colors and marker size for beauty <3
         intes.update_traces(marker = dict(color = cols, size=8))
+
         with left:
-            st.plotly_chart(intes, use_container_width = True)
-    except:
+            st.plotly_chart(intes, use_container_width = True) #    Show integrals plot
+    except: #   Could not convert names to floats
         with left:
             st.write('Names cant be converted into float to plot')
             st.write('You can still download the calculated integral values')
 
+
+    #   Change layout of main plot
     currentfig.update_layout(height = 600, xaxis_title='time')
+    
     with right:
-        st.plotly_chart(currentfig, use_container_width = True)
-        #st.write(f'Actual number: %d' % st.session_state[f"{curve} rightlim"])
-        #st.write(time_segment)
+        st.plotly_chart(currentfig, use_container_width = True) #   Show main plot
 
         
