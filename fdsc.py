@@ -22,8 +22,6 @@ if selected is not None:
                                        type = ['csv'])
             try:
                 curvas = kinetics.get_names(og_file)
-            except ValueError:
-                st.write('Input correct number curve names! (Please)')
             except TypeError:
                 st.write('Upload file please')
         try:
