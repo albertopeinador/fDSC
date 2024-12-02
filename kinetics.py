@@ -116,18 +116,18 @@ def kinetics(df):   #Proper processing
             f"Set integration limit of curve = {curve}",
             key=f"{curve} rlim",
             value=st.session_state[f"{curve} rightlim"],
-            step = .001,
-            format="%0.3f"
+            step = .0001,
+            format="%0.4f"
         )
 
     for i in names[1:-1]:
 
         if f't_index {i}' not in st.session_state:
             st.session_state[f't_index {i}'] = df[names[0]].where(
-                df[names[0]] > st.session_state[f"{i} rightlim"]
+                df[names[0]] >= st.session_state[f"{i} rightlim"]
                 ).first_valid_index()
         st.session_state[f't_index {i}'] = df[names[0]].where(
-                df[names[0]] > st.session_state[f"{i} rightlim"]
+                df[names[0]] >= st.session_state[f"{i} rightlim"]
                 ).first_valid_index()
         
         end = min(len(df[names[0]]) - 1, st.session_state[f't_index {i}'])
@@ -178,6 +178,8 @@ def kinetics(df):   #Proper processing
     except:
         with left:
             st.write('Names cant be converted into float to plot')
+
+    currentfig.update_layout(height = 600, xaxis_title='time')
     with right:
         st.plotly_chart(currentfig, use_container_width = True)
         #st.write(f'Actual number: %d' % st.session_state[f"{curve} rightlim"])
