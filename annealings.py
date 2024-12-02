@@ -178,15 +178,16 @@ def annealings():
                 )
                 #st.write(st.session_state[f"delta_{Ta}"])
 
-        if mode != 'FULL':
+        
             #   INTEGRATION LOOP
-            for i in temps:
-
+        for i in temps:
+            if f"delta_{i}" in st.session_state:
                 #   Apply delta modification to all curves
                 big_data[i][0]["Heat Flow"] += (st.session_state[f"delta_{i}"] / 10) * big_data[
                     i
                 ][0]["Heat Flow"].max()
-
+        if mode != 'FULL':
+            for i in temps:
                 if "x_change_check" not in st.session_state:
                     st.session_state["x_change_check"] = "easteregg"
                 #   Initialize session_state with the auto-generated limits
@@ -275,17 +276,20 @@ def annealings():
                 intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
 
             color_list = [main_color, ref_color]
-            fill_type = [None, "tonexty"]
+            fill_type = ["tonexty", None]
+            width = [2, 1.5]
             if mode == 'MODIFY':
-                for i in [0, 1]:
+                for i in [1, 0]:
+                    st.write(i, fill_type[i])
                     fig.add_trace(
                         go.Scatter(
                             x=big_data[int(Ta)][i][eje_x],
                             y=big_data[int(Ta)][i]["Heat Flow"],
-                            line_color=color_list[i],
+                            #line_color=color_list[i],
                             fill=fill_type[i],
                             fillcolor=shade_color,
                             mode="lines",
+                            line = dict(color = color_list[i], width=width[i]),
                         )
                     )
 
@@ -489,16 +493,18 @@ def annealings():
             ]
             for i in temps:
                 color_list = [main_color, ref_color]
-                fill_type = [None, "tonexty"]
+                fill_type = ["tonexty", None]
                 text = ["", i]
-                for j in [0, 1]:
+                width = [2, 1.5]
+                for j in [1, 0]:
                     fig.add_trace(
                         go.Scatter(
                             x = big_data[i][j][eje_x],
                             y=big_data[i][j]["Heat Flow"],
-                            line_color=color_list[j],
+                            #line_color=color_list[j],
                             fill=fill_type[j],
                             fillcolor=shade_color,
+                            line = dict(color=color_list[j], width = width[j])
                         )
                     )
                     fig.add_annotation(

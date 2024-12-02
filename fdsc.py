@@ -3,6 +3,7 @@ from streamlit_navigation_bar import st_navbar
 import kinetics
 import annealings
 import welcome
+import coolings
 
 st.set_page_config(layout="wide")
 
@@ -35,3 +36,5 @@ if selected is not None:
             st.write('Please Load File')
     elif selected == 'Annealings':
         annealings.annealings()
+    elif selected == 'Coolings':
+        coolings.coolings()
