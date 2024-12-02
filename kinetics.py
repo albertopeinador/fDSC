@@ -167,11 +167,17 @@ def kinetics(df):   #Proper processing
                                     , fill = 'tonexty',
                                     showlegend = False,
                                     line = dict(color='rgba(0,0,0,0)')))
-    inte_x = list(reversed([float(i.replace(',', '.')) for i in names[1:-1]]))
-    inte_y = list(reversed(integraciones[:]))
-    intes = px.scatter(x = inte_x, y = inte_y, log_x = True)
-    with left:
-        st.plotly_chart(intes, use_container_width = True)
+    try:
+        inte_x = list(reversed([float(i.replace(',', '.')) for i in names[1:-1]]))
+    
+    
+        inte_y = list(reversed(integraciones[:]))
+        intes = px.scatter(x = inte_x, y = inte_y, log_x = True)
+        with left:
+            st.plotly_chart(intes, use_container_width = True)
+    except:
+        with left:
+            st.write('Names cant be converted into float to plot')
     with right:
         st.plotly_chart(currentfig, use_container_width = True)
         #st.write(f'Actual number: %d' % st.session_state[f"{curve} rightlim"])
