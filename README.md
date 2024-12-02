@@ -1,3 +1,4 @@
+##  Note: This is somewhat outdated, thanks for your patiance and understanding
 #  Flash DSC
 A web app to process your flash-DSC data.
 ##  Introduction
