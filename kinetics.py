@@ -157,8 +157,6 @@ def kinetics(df, filename):   #Proper processing
         area_max_peak = np.trapz(st.session_state[f'signal_segment {i}'] - st.session_state[f'baseline {i}'], st.session_state[f'time_segment {i}'])
         integraciones.append(area_max_peak)
         #st.write([st.session_state[f'baseline {i}']]*len(st.session_state[f'time_segment {curve}']))
-    currentfig.add_trace(go.Scatter(x = df[names[0]], y = df[f'{curve} subtracted'],
-                                    name = f'{curve}\n subtracted'))
 
     currentfig.add_trace(go.Scatter(x = st.session_state[f'time_segment {curve}'],
                                     y = st.session_state[f'signal_segment {curve}'],
@@ -170,7 +168,8 @@ def kinetics(df, filename):   #Proper processing
                                     , fill = 'tonexty',
                                     showlegend = False,
                                     line = dict(color='rgba(0,0,0,0)')))
-    
+    currentfig.add_trace(go.Scatter(x = df[names[0]], y = df[f'{curve} subtracted'],
+                                    name = f'{curve}\n subtracted'))
     integrals_df = pd.DataFrame(list(reversed(integraciones[:])), index = list(reversed([i.replace(',', '.') for i in names[1:-1]])), columns = ['Integral'])
     integrals_df.index.name = 'Curve'
     intes_csv = integrals_df.to_csv()
