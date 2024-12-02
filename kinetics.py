@@ -167,7 +167,7 @@ def kinetics(df):   #Proper processing
                                     , fill = 'tonexty',
                                     showlegend = False,
                                     line = dict(color='rgba(0,0,0,0)')))
-    inte_x = list(reversed([float(i) for i in names[1:-1]]))
+    inte_x = list(reversed([float(i.replace(',', '.')) for i in names[1:-1]]))
     inte_y = list(reversed(integraciones[:]))
     intes = px.scatter(x = inte_x, y = inte_y, log_x = True)
     with left:
