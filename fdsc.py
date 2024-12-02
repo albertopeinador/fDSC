@@ -26,7 +26,7 @@ if selected is not None:
                 st.write('Upload file please')
         try:
             df = kinetics.read_kinetics(og_file, curvas)
-            kinetics.kinetics(df)
+            kinetics.kinetics(df, og_file.name)
         except NameError:
             st.write('Enter curve names or use default by switching \'As table\' toggle on.')
     elif selected == 'Annealings':

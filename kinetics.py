@@ -58,7 +58,7 @@ def read_kinetics(og_file, edited_names):   #Actually load data
 
 #   ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––   #
 
-def kinetics(df):   #Proper processing
+def kinetics(df, filename):   #Proper processing
     currentfig = go.Figure() #Create current curve being modified
 
     sub_names = []          #Names of new columns for the subtracted data
@@ -112,13 +112,15 @@ def kinetics(df):   #Proper processing
         # –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––   #
     
     with left:
-        st.number_input(
-            f"Set integration limit of curve = {curve}",
-            key=f"{curve} rlim",
-            value=st.session_state[f"{curve} rightlim"],
-            step = .0001,
-            format="%0.4f"
-        )
+        n_inpt, dwld = st.columns(2)
+        with n_inpt:
+            st.number_input(
+                f"Set integration limit of curve = {curve}",
+                key=f"{curve} rlim",
+                value=st.session_state[f"{curve} rightlim"],
+                step = .0001,
+                format="%0.4f"
+            )
 
     for i in names[1:-1]:
 
@@ -155,7 +157,8 @@ def kinetics(df):   #Proper processing
         area_max_peak = np.trapz(st.session_state[f'signal_segment {i}'] - st.session_state[f'baseline {i}'], st.session_state[f'time_segment {i}'])
         integraciones.append(area_max_peak)
         #st.write([st.session_state[f'baseline {i}']]*len(st.session_state[f'time_segment {curve}']))
-    currentfig.add_trace(go.Scatter(x = df[names[0]], y = df[f'{curve} subtracted']))
+    currentfig.add_trace(go.Scatter(x = df[names[0]], y = df[f'{curve} subtracted'],
+                                    name = f'{curve}\n subtracted'))
 
     currentfig.add_trace(go.Scatter(x = st.session_state[f'time_segment {curve}'],
                                     y = st.session_state[f'signal_segment {curve}'],
@@ -167,9 +170,19 @@ def kinetics(df):   #Proper processing
                                     , fill = 'tonexty',
                                     showlegend = False,
                                     line = dict(color='rgba(0,0,0,0)')))
+    
+    integrals_df = pd.DataFrame(list(reversed(integraciones[:])), index = list(reversed([i.replace(',', '.') for i in names[1:-1]])), columns = ['Integral'])
+    integrals_df.index.name = 'Curve'
+    intes_csv = integrals_df.to_csv()
+    with dwld:
+        st.download_button('Download Integrals',
+                           data = intes_csv,
+                           file_name = filename[:-4] + '_integrals.csv',
+                           use_container_width = True,
+                           )
+    
     try:
         inte_x = list(reversed([float(i.replace(',', '.')) for i in names[1:-1]]))
-    
     
         inte_y = list(reversed(integraciones[:]))
         intes = px.scatter(x = inte_x, y = inte_y, log_x = True)
@@ -178,6 +191,7 @@ def kinetics(df):   #Proper processing
     except:
         with left:
             st.write('Names cant be converted into float to plot')
+            st.write('You can still download the calculated integral values')
 
     currentfig.update_layout(height = 600, xaxis_title='time')
     with right:
