@@ -6,6 +6,10 @@ import numpy as np
 import csv
 import plotly.express as px
 from io import StringIO
+import matplotlib.pyplot as plt
+from matplotlib.colors import rgb2hex
+
+
 
 #   ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––   #
 
@@ -166,10 +170,12 @@ def kinetics(df, filename):   #Proper processing
     currentfig.add_trace(go.Scatter(x = st.session_state[f'time_segment {curve}'],
                                     y = [st.session_state[f'baseline {curve}']]*len(st.session_state[f'time_segment {curve}'])
                                     , fill = 'tonexty',
+                                    fillcolor = '#cccccc',
                                     showlegend = False,
                                     line = dict(color='rgba(0,0,0,0)')))
     currentfig.add_trace(go.Scatter(x = df[names[0]], y = df[f'{curve} subtracted'],
-                                    name = f'{curve}\n subtracted'))
+                                    name = f'{curve}\n subtracted',
+                                    line = dict(color = '#08a5b9', width = 3)))
     integrals_df = pd.DataFrame(list(reversed(integraciones[:])), index = list(reversed([i.replace(',', '.') for i in names[1:-1]])), columns = ['Integral'])
     integrals_df.index.name = 'Curve'
     intes_csv = integrals_df.to_csv()
@@ -181,10 +187,19 @@ def kinetics(df, filename):   #Proper processing
                            )
     
     try:
+        cmap = plt.get_cmap("Blues")
+        colors = np.linspace(0.3, 1, len(names[1:-1]))
+        cols = []
+        for i in range(len(names[1:-1])):
+            color = cmap(colors[i])
+            cols.append(str(rgb2hex(color)))
+
+
         inte_x = list(reversed([float(i.replace(',', '.')) for i in names[1:-1]]))
     
         inte_y = list(reversed(integraciones[:]))
         intes = px.scatter(x = inte_x, y = inte_y, log_x = True)
+        intes.update_traces(marker = dict(color = cols, size=8))
         with left:
             st.plotly_chart(intes, use_container_width = True)
     except:
