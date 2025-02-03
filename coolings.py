@@ -18,7 +18,7 @@ def coolingsWIP():
 def coolings():
     #st.title('Coolings data')
     uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"], label_visibility='collapsed')
-    curves, plots = st.columns([2, 5])
+    curves, plots = st.columns([2.1, 5])
     if 'uploaded_file' not in st.session_state:
         st.session_state['uploaded_file'] = None
         st.session_state['datas'] = None
@@ -47,6 +47,6 @@ def coolings():
                         st.dataframe(sub_df)
     with plots:
         if uploaded_file is not None:
-            _, col, _ = st.columns([1, 2, 1])
+            _, col, _ = st.columns([2.3, 2, 2])
             with col:
                 st.radio('Eje x', ['Ts', 'Tr', 't'], horizontal=True)
