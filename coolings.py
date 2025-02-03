@@ -23,28 +23,25 @@ def coolings():
     index_reset = st.checkbox("Reset Index and Split Data")
     column_list = ["Index", "Ts", "Tr", "Value"]
     curves, plots = st.columns([2, 5])
-    with curves:
-        status_box = st.status("Processing...", expanded=False)
+    if uploaded_file is not None:
+        with curves:
+            status_box = st.status("Processing...", expanded=False)
     if uploaded_file != st.session_state['uploaded_file']:
         with curves:
             if uploaded_file is not None:
                 with status_box as status:
-                    if not index_reset:
-                        df = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=False)
-                        st.write("Processed Data:")
-                        st.dataframe(df)
+                    df = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=index_reset)
 
-                    # Optionally handle reset index
-                    else:
-                        split_data = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=True)
-                        for key, sub_df in split_data.items():
-                            st.write(f"### {key}")
-                            st.dataframe(sub_df)
                     status.update(label="Done!", state="complete")
         st.session_state['uploaded_file'] = uploaded_file
     with curves:
         with status_box as status:
-            st.write('Works after')
+            if not index_reset:
+                st.dataframe(df)
+            else:
+                for key, sub_df in df.items():
+                    st.write(f"### {key}")
+                    st.dataframe(sub_df)
     with plots:
         if uploaded_file is not None:
             _, col, _ = st.columns([1, 2, 1])
