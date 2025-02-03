@@ -17,25 +17,29 @@ def coolingsWIP():
 
 def coolings():
     #st.title('Coolings data')
+    if 'uploaded_file' not in st.session_state:
+        st.session_state['uploaded_file'] = None
     uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"], label_visibility='collapsed')
     index_reset = st.checkbox("Reset Index and Split Data")
     column_list = ["Index", "Ts", "Tr", "Value"]
     curves, plots = st.columns([2, 5])
-    with curves:
-        if uploaded_file is not None:
-            with st.status("Processing...", expanded=False) as status:
-                if not index_reset:
-                    df = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=False)
-                    st.write("Processed Data:")
-                    st.dataframe(df)
+    if uploaded_file != st.session_state['uploaded_file']:
+        with curves:
+            if uploaded_file is not None:
+                with st.status("Processing...", expanded=False) as status:
+                    if not index_reset:
+                        df = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=False)
+                        st.write("Processed Data:")
+                        st.dataframe(df)
 
-                # Optionally handle reset index
-                else:
-                    split_data = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=True)
-                    for key, sub_df in split_data.items():
-                        st.write(f"### {key}")
-                        st.dataframe(sub_df)
-                status.update(label="Done!", state="complete")
+                    # Optionally handle reset index
+                    else:
+                        split_data = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=True)
+                        for key, sub_df in split_data.items():
+                            st.write(f"### {key}")
+                            st.dataframe(sub_df)
+                    status.update(label="Done!", state="complete")
+        st.session_state['uploaded_file'] = uploaded_file
     with plots:
         if uploaded_file is not None:
             _, col, _ = st.columns([1, 2, 1])
