@@ -19,6 +19,7 @@ def coolings():
     #st.title('Coolings data')
     if 'uploaded_file' not in st.session_state:
         st.session_state['uploaded_file'] = None
+        st.session_state['datas'] = None
     uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"], label_visibility='collapsed')
     index_reset = st.checkbox("Reset Index and Split Data")
     column_list = ["Index", "Ts", "Tr", "Value"]
@@ -30,7 +31,7 @@ def coolings():
         with curves:
             if uploaded_file is not None:
                 with status_box as status:
-                    df = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=index_reset)
+                    st.session_state['datas'] = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=index_reset)
 
                     status.update(label="Done!", state="complete")
         st.session_state['uploaded_file'] = uploaded_file
@@ -38,9 +39,9 @@ def coolings():
         with curves:
             with status_box as status:
                 if not index_reset:
-                    st.dataframe(df)
+                    st.dataframe(st.session_state['datas'])
                 else:
-                    for key, sub_df in df.items():
+                    for key, sub_df in st.session_state['datas'].items():
                         st.write(f"### {key}")
                         st.dataframe(sub_df)
     with plots:
