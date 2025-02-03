@@ -20,10 +20,10 @@ def coolings():
     uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"])
     index_reset = st.checkbox("Reset Index and Split Data")
     column_list = ["Index", "Ts", "Tr", "Value"]
-    curves, plots = st.columns([1, 5])
+    curves, plots = st.columns([2, 5])
     with curves:
         if uploaded_file is not None:
-            with st.status("Processing...", expanded=True) as status:
+            with st.status("Processing...", expanded=False) as status:
                 if not index_reset:
                     df = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=False)
                     st.write("Processed Data:")
@@ -36,3 +36,5 @@ def coolings():
                         st.write(f"### {key}")
                         st.dataframe(sub_df)
                 status.update(label="Done!", state="complete")
+    with plots:
+        st.radio('Eje x', ['Ts', 'Tr', 't'], horizontal=True)
