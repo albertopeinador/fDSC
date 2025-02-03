@@ -17,11 +17,11 @@ def coolingsWIP():
 
 def coolings():
     #st.title('Coolings data')
+    uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"], label_visibility='collapsed')
     curves, plots = st.columns([2, 5])
     if 'uploaded_file' not in st.session_state:
         st.session_state['uploaded_file'] = None
         st.session_state['datas'] = None
-    uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"], label_visibility='collapsed')
     with curves:
         index_reset = st.checkbox("Reset Index and Split Data")
     column_list = ["Index", "Ts", "Tr", "Value"]
