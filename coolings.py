@@ -17,7 +17,7 @@ def coolingsWIP():
 
 def coolings():
     #st.title('Coolings data')
-    uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"], label_visibility=False)
+    uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"], label_visibility='collapsed')
     index_reset = st.checkbox("Reset Index and Split Data")
     column_list = ["Index", "Ts", "Tr", "Value"]
     curves, plots = st.columns([2, 5])
@@ -37,4 +37,5 @@ def coolings():
                         st.dataframe(sub_df)
                 status.update(label="Done!", state="complete")
     with plots:
+        _, col, _ = st.columns([1, 2, 1])
         st.radio('Eje x', ['Ts', 'Tr', 't'], horizontal=True)
