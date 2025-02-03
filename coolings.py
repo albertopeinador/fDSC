@@ -16,8 +16,8 @@ def coolingsWIP():
     
 
 def coolings():
-    st.title('Coolings data')
-    uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"])
+    #st.title('Coolings data')
+    uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"], label_visibility=False)
     index_reset = st.checkbox("Reset Index and Split Data")
     column_list = ["Index", "Ts", "Tr", "Value"]
     curves, plots = st.columns([2, 5])
