@@ -23,9 +23,10 @@ def coolings():
     index_reset = st.checkbox("Reset Index and Split Data")
     column_list = ["Index", "Ts", "Tr", "Value"]
     curves, plots = st.columns([2, 5])
+    with curves:
+        status_box = st.status("Processing...", expanded=False)
     if uploaded_file != st.session_state['uploaded_file']:
         with curves:
-            status_box = st.status("Processing...", expanded=False)
             if uploaded_file is not None:
                 with status_box as status:
                     if not index_reset:
