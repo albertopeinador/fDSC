@@ -19,14 +19,16 @@ def coolings():
     st.title('Coolings data')
     uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"])
     if uploaded_file is not None:
-        column_list = ["Index", "Ts", "Tr", "Value"]  # Adjust column names accordingly
-        df = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=False)
-        st.write("Processed Data:")
-        st.dataframe(df)
-        
-        # Optionally handle reset index
-        if st.checkbox("Reset Index and Split Data"):
-            split_data = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=True)
-            for key, sub_df in split_data.items():
-                st.write(f"### {key}")
-                st.dataframe(sub_df)
+        with st.status("Processing...", expanded=True) as status:
+            column_list = ["Index", "Ts", "Tr", "Value"]  # Adjust column names accordingly
+            df = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=False)
+            st.write("Processed Data:")
+            st.dataframe(df)
+
+            # Optionally handle reset index
+            if st.checkbox("Reset Index and Split Data"):
+                split_data = read.load_float_data(uploaded_file, column_list, index=True, index_col=0, reset_index=True)
+                for key, sub_df in split_data.items():
+                    st.write(f"### {key}")
+                    st.dataframe(sub_df)
+            status.update(label="Done!", state="complete")
