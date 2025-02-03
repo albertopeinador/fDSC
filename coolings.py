@@ -34,14 +34,15 @@ def coolings():
 
                     status.update(label="Done!", state="complete")
         st.session_state['uploaded_file'] = uploaded_file
-    with curves:
-        with status_box as status:
-            if not index_reset:
-                st.dataframe(df)
-            else:
-                for key, sub_df in df.items():
-                    st.write(f"### {key}")
-                    st.dataframe(sub_df)
+    if uploaded_file is not None:
+        with curves:
+            with status_box as status:
+                if not index_reset:
+                    st.dataframe(df)
+                else:
+                    for key, sub_df in df.items():
+                        st.write(f"### {key}")
+                        st.dataframe(sub_df)
     with plots:
         if uploaded_file is not None:
             _, col, _ = st.columns([1, 2, 1])
