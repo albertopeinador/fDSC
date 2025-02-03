@@ -42,7 +42,7 @@ def coolings():
                     status.update(label="Done!", state="complete")
         st.session_state['uploaded_file'] = uploaded_file
 
-    with status_box:
+    with status_box as status:
         st.write('Works after')
     with plots:
         if uploaded_file is not None:
