@@ -41,6 +41,9 @@ def coolings():
                             st.dataframe(sub_df)
                     status.update(label="Done!", state="complete")
         st.session_state['uploaded_file'] = uploaded_file
+
+    with status_box:
+        st.write('Works after')
     with plots:
         if uploaded_file is not None:
             _, col, _ = st.columns([1, 2, 1])
