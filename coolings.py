@@ -37,5 +37,7 @@ def coolings():
                         st.dataframe(sub_df)
                 status.update(label="Done!", state="complete")
     with plots:
-        _, col, _ = st.columns([1, 2, 1])
-        st.radio('Eje x', ['Ts', 'Tr', 't'], horizontal=True)
+        if uploaded_file is not None:
+            _, col, _ = st.columns([1, 2, 1])
+            with col:
+                st.radio('Eje x', ['Ts', 'Tr', 't'], horizontal=True)
