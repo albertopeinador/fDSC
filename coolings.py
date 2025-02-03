@@ -17,13 +17,14 @@ def coolingsWIP():
 
 def coolings():
     #st.title('Coolings data')
+    curves, plots = st.columns([2, 5])
     if 'uploaded_file' not in st.session_state:
         st.session_state['uploaded_file'] = None
         st.session_state['datas'] = None
     uploaded_file = st.file_uploader("Upload a data file", type=["txt", "csv"], label_visibility='collapsed')
-    index_reset = st.checkbox("Reset Index and Split Data")
+    with curves:
+        index_reset = st.checkbox("Reset Index and Split Data")
     column_list = ["Index", "Ts", "Tr", "Value"]
-    curves, plots = st.columns([2, 5])
     if uploaded_file is not None:
         with curves:
             status_box = st.status("Processing...", expanded=False)
