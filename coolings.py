@@ -66,44 +66,44 @@ def coolings():
             #        plot_curves = list(range(len(datas)))
             #plot_labels = [f'curva_{i}' for i in plot_curves]
 
-            
-    with plots:
-        if uploaded_file is not None:
-            _, col, _ = st.columns([2.3, 2, 2])
-            with col:
-                ejex = st.radio('Eje x', ['Ts', 'Tr'], horizontal=True)
-            _, col2, _ = st.columns([1, 5, 1])
-            with col2:
-                if index_reset:
-                    for i in filtered_dict.keys():
-                        fig.add_trace(go.Scatter(x = datas[i][ejex], y = datas[i]['Value']))
-                else:
-                    fig.add_trace(go.Scatter(x = datas[ejex], y = datas['Value']))
-                st.plotly_chart(fig, use_container_width=True)
-        with curves:
-            _, dwl, _ = st.columns([.3, 1, .3])
-            with dwl:
-                if index_reset:
-                    df_list = []
-                    id_row = []
+    if uploaded_file is not None:
+        with plots:
+            if uploaded_file is not None:
+                _, col, _ = st.columns([2.3, 2, 2])
+                with col:
+                    ejex = st.radio('Eje x', ['Ts', 'Tr'], horizontal=True)
+                _, col2, _ = st.columns([1, 5, 1])
+                with col2:
+                    if index_reset:
+                        for i in filtered_dict.keys():
+                            fig.add_trace(go.Scatter(x = datas[i][ejex], y = datas[i]['Value']))
+                    else:
+                        fig.add_trace(go.Scatter(x = datas[ejex], y = datas['Value']))
+                    st.plotly_chart(fig, use_container_width=True)
+            with curves:
+                _, dwl, _ = st.columns([.3, 1, .3])
+                with dwl:
+                    if index_reset:
+                        df_list = []
+                        id_row = []
 
-                    for key, df in filtered_dict.items():
-                        id_row.extend([key] * df.shape[1])  # Repeat key for each column
-                        df_list.append(df)
+                        for key, df in filtered_dict.items():
+                            id_row.extend([key] * df.shape[1])  # Repeat key for each column
+                            df_list.append(df)
 
-                    # Concatenate along columns, aligning by index
-                    result = pd.concat(df_list, axis=1)
+                        # Concatenate along columns, aligning by index
+                        result = pd.concat(df_list, axis=1)
 
-                    # Insert the identifier row at the top
-                    result.columns = pd.MultiIndex.from_arrays([id_row, result.columns])
+                        # Insert the identifier row at the top
+                        result.columns = pd.MultiIndex.from_arrays([id_row, result.columns])
 
-                    csv_buffer = StringIO()
-                    result.to_csv(csv_buffer, index=False)
-                    csv_data = csv_buffer.getvalue()
-                    st.download_button(
-                                label="Download CSV",
-                                data=csv_data,
-                                file_name="merged_data.csv",
-                                mime="text/csv"
-                            )
-                    #st.write(result)
+                        csv_buffer = StringIO()
+                        result.to_csv(csv_buffer, index=False)
+                        csv_data = csv_buffer.getvalue()
+                        st.download_button(
+                                    label="Download CSV",
+                                    data=csv_data,
+                                    file_name="merged_data.csv",
+                                    mime="text/csv"
+                                )
+                        #st.write(result)
