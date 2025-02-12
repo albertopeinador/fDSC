@@ -510,9 +510,9 @@ def annealings():
         )
         with graf:
             st.plotly_chart(fig, use_container_width = True, **{"config": config})
-    #except IndexError:
-    #    with graf:
-    #        st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
+    except IndexError:
+        with graf:
+            st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
     except TypeError:
         with graf:
             st.markdown('<p class="big-font">Missing File:</p>', unsafe_allow_html=True)
