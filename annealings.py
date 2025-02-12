@@ -258,7 +258,7 @@ def annealings():
             width = [2, 1.5]
             if mode == 'MODIFY':
                 for i in [1, 0]:
-                    st.write(i, fill_type[i])
+                    #st.write(i, fill_type[i])
                     fig.add_trace(
                         go.Scatter(
                             x=big_data[int(Ta)][i][eje_x],
@@ -452,6 +452,7 @@ def annealings():
                 )
                 * 1.01,
             ]
+            #st.dataframe(big_data)
             for i in temps:
                 color_list = [main_color, ref_color]
                 fill_type = ["tonexty", None]
@@ -513,14 +514,14 @@ def annealings():
     except IndexError:
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
-    except TypeError:
-        with graf:
-            st.markdown('<p class="big-font">Missing File:</p>', unsafe_allow_html=True)
-            for key, (df1, df2) in big_data.items():
-                if df1 is None:
-                    st.write("Ta = ", key)
-                if df2 is None:
-                    st.write("Ta = ", key, "_ref")
+    #except TypeError:
+    #    with graf:
+    #        st.markdown('<p class="big-font">Missing File:</p>', unsafe_allow_html=True)
+    #        for key, (df1, df2) in big_data.items():
+    #            if df1 is None:
+    #                st.write("Ta = ", key)
+    #            if df2 is None:
+    #                st.write("Ta = ", key, "_ref")
     #except KeyError:
     #    with graf:
     #        st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
