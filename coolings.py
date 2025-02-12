@@ -4,17 +4,17 @@ import plotly.graph_objects as go
 import pandas as pd
 from io import StringIO
 
-def coolingsWIP():
-    st.markdown(
-        """
-        <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
-            <h1 style="font-size: 50px; font-weight: bold; text-align: center;">COMING SOON</h1>
-            <h2 style="font-size: 20px; text-align:center;">(now kinda for sure)</h2>
-        </div>
-        """,
-        unsafe_allow_html=True
-        )
-    
+#def coolingsWIP():
+#    st.markdown(
+#        """
+#        <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+#            <h1 style="font-size: 50px; font-weight: bold; text-align: center;">COMING SOON</h1>
+#            <h2 style="font-size: 20px; text-align:center;">(now kinda for sure)</h2>
+#        </div>
+#        """,
+#        unsafe_allow_html=True
+#        )
+
 
 def coolings():
     #st.title('Coolings data')
@@ -69,10 +69,14 @@ def coolings():
     if uploaded_file is not None:
         with plots:
             if uploaded_file is not None:
-                _, col, _ = st.columns([2.3, 2, 2])
-                with col:
+                _, x_ax, selector, slider = st.columns([.8, 1, 1, 3])
+                with x_ax:
                     ejex = st.radio('Eje x', ['Ts', 'Tr'], horizontal=True)
-                _, col2, _ = st.columns([1, 5, 1])
+                with selector: 
+                    selected = st.selectbox('Modify: ', filtered_dict.keys())
+                #with slider:
+                    #delta = st.slider('apply delta: ', max_value=1., min_value=-1., value=0., step=.01)
+                _, col2, _ = st.columns([1, 6, 1])
                 with col2:
                     if index_reset:
                         for i in filtered_dict.keys():
@@ -80,6 +84,7 @@ def coolings():
                     else:
                         fig.add_trace(go.Scatter(x = datas[ejex], y = datas['Value']))
                     st.plotly_chart(fig, use_container_width=True)
+
             with curves:
                 _, dwl, _ = st.columns([.3, 1, .3])
                 with dwl:
@@ -106,4 +111,41 @@ def coolings():
                                     file_name="merged_data.csv",
                                     mime="text/csv"
                                 )
+        for i in filtered_dict.keys():
+            if f"new_delta_{i}" not in st.session_state:
+                st.session_state[f"new_delta_{i}"] = 0.
+            if f"delta_{i}" not in st.session_state:
+                st.session_state[f"delta_{i}"] = 0.
+        if f'has_changed_{selected}' not in st.session_state:
+            st.session_state[f'has_changed_{selected}'] = True
+        if st.session_state[f"new_delta_{selected}"] != 0.:
+            st.session_state[f"delta_{selected}"] = st.session_state[f"new_delta_{selected}"]
+            st.session_state[f'has_changed_{selected}'] = False
+        elif st.session_state[f'has_changed_{selected}']:
+            st.session_state[f"delta_{selected}"] = st.session_state[f"new_delta_{selected}"]
+
+        with plots:
+            with slider:
+                current_delta = st.slider(
+                    f"Set the delta of Ta = {selected}",
+                    min_value=-1.0,
+                    max_value=1.0,
+                    key=f"new_delta_{selected}",
+                    value=st.session_state[f"delta_{selected}"],
+                    step = .01
+                )
+                #st.write(st.session_state[f"delta_{Ta}"])
+
+        
+            #   INTEGRATION LOOP
+        mod_filtered_dict = {}
+        fig2 = go.Figure()
+        for i in filtered_dict.keys():
+            if f"delta_{i}" in st.session_state:
+                #   Apply delta modification to all curves
+                mod_filtered_dict[i] = filtered_dict[i]
+                mod_filtered_dict[i]["Value"] += (st.session_state[f"delta_{i}"]) * mod_filtered_dict[i]["Value"].max()
+            fig2.add_trace(go.Scatter(x = mod_filtered_dict[i][ejex], y = mod_filtered_dict[i]['Value']))
+        st.plotly_chart(fig2, use_container_width=True)
+            #st.line_chart(mod_filtered_dict, x = ejex, y=filtered_dict[i]['Value'])
                         #st.write(result)
