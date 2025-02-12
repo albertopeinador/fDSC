@@ -8,9 +8,33 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from matplotlib.colors import rgb2hex
+from io import StringIO
 
+def bigdata_to_csv(data_dict):
+    # List to hold all DataFrames after renaming
+    renamed_dfs = []
 
+    # Process each dictionary entry
+    for key, (df1, df2) in data_dict.items():
+        # Rename columns with dictionary key prefix to avoid conflicts
+        df1 = df1.add_prefix(f"{key}_")
+        df2 = df2.add_prefix(f"{key}_").add_suffix("_ref")
 
+        # Store in list for final concatenation
+        renamed_dfs.append(df1)
+        renamed_dfs.append(df2)
+
+    # Concatenate all DataFrames horizontally (axis=1)
+    final_df = pd.concat(renamed_dfs, axis=1)
+
+    # Convert final DataFrame to CSV format
+    output = StringIO()
+    final_df.to_csv(output, index=False)
+
+    # Get CSV content
+    csv_string = output.getvalue()
+    output.close()
+    return csv_string
 
 #  Set layout to wide screen
 #st.set_page_config(layout="wide")
@@ -185,15 +209,17 @@ def annealings():
                 regs_label = "regs_" + str(i)
                 if (regs_label not in st.session_state or st.session_state["x_change_check"] != eje_x):
                     #   Find auto-limits for integration
+                    
                     left, right = fai.find_int_region(
                         big_data[i],
                         int_dif_th
                         * (big_data[i][0]["Heat Flow"] - big_data[i][1]["Heat Flow"]).max(),
                         "Heat Flow",
                     )
+                    
                     st.session_state["regs_" + str(i)] = [
-                        big_data[i][0][eje_x].iloc[left],
-                        big_data[i][0][eje_x].iloc[right],
+                        big_data[i][0][eje_x][left],
+                        big_data[i][0][eje_x][right],
                     ]
                     if i == temps[-1]:
                         st.session_state["x_change_check"] = eje_x
@@ -452,6 +478,12 @@ def annealings():
                 )
                 * 1.01,
             ]
+            st.download_button(
+                    label="Download CSV",
+                    data=bigdata_to_csv(big_data),
+                    file_name="data_output.csv",
+                    mime="text/csv"
+                                )
             #st.dataframe(big_data)
             for i in temps:
                 color_list = [main_color, ref_color]
