@@ -5,6 +5,7 @@ import find_and_int as fai
 import numpy as np
 import new_scalebar as sc
 import pandas as pd
+from scipy.signal import savgol_filter
 import plotly.graph_objects as go
 import plotly.express as px
 from matplotlib.colors import rgb2hex
@@ -228,6 +229,7 @@ def annealings():
             with ctr_panel:
                 #   Check if you want to show difference plot
                 show_dif = st.checkbox("Show dif")
+                smooth_dif = st.checkbox("Smooth dif")
                 #   Difference plot controls in two columns (30% width for scale and 70% for position)
                 scale, delta = st.columns([0.3, 0.7])
                 if show_dif:
@@ -241,6 +243,17 @@ def annealings():
                             value=0.9,
                             key="dif_delta_key",
                         )
+                if smooth_dif:
+                    with scale:
+                        smooth_poly = st.number_input("Polynomial order", value=2)
+                    with delta:
+                        smooth_window = st.slider(
+                                "smooth window",
+                                max_value=60,
+                                min_value=2,
+                                value=30,
+                                key="smooth_window",
+                            )
                 #   Calculate difference between curves
                 # st.write(Ta, type(Ta))
                 #   Divide into three columns: one for each color to define
@@ -248,6 +261,8 @@ def annealings():
                 #   Create color pickers in each column for each color
             if mode == 'MODIFY':
                 dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
+                if smooth_dif:
+                    dif = savgol_filter(dif, smooth_window, smooth_poly)
                 if f'new_lims_{Ta}' not in st.session_state:
                     st.session_state[f'new_lims_{Ta}'] = st.session_state["regs_" + str(Ta)]
                 st.session_state["regs_" + str(Ta)] = st.session_state[f'new_lims_{Ta}']
@@ -271,13 +286,21 @@ def annealings():
                     & (big_data[i][0][eje_x] <= st.session_state["regs_" + str(i)][1])
                 ].index
                 start_idx = big_data[i][0].index[0]
-                y = (big_data[i][0]["Heat Flow"]
-                    - big_data[i][1]["Heat Flow"]).iloc[indices.min()-start_idx: indices.max()-start_idx]
-                x = big_data[i][0]["t"].iloc[indices.min()-start_idx: indices.max()-start_idx]
-                nan_indices = y.index[y.isna()].tolist()
-                y_clean = y.dropna()
-                x_clean = x[~y.isna()]
-                ints.append([i, np.trapz(y_clean, x_clean)])
+                y_dif = (big_data[i][0]["Heat Flow"]
+                    - big_data[i][1]["Heat Flow"])
+                if smooth_dif:
+                    y_dif = savgol_filter(y_dif, smooth_window, smooth_poly)
+
+                else:
+                    y_dif = np.array(y_dif)
+
+                y_dif = y_dif[indices.min()-start_idx: indices.max()-start_idx]
+          
+                    # nan_indices = y.index[y.isna()].tolist()
+                    # y_clean = y.dropna()
+                x = np.array(big_data[i][0]["t"])[indices.min()-start_idx: indices.max()-start_idx]
+                #x_clean = x[~y.isna()]
+                ints.append([i, np.trapz(y_dif, x)])
                 intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
             color_list = [main_color, ref_color]
             fill_type = ["tonexty", None]
