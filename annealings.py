@@ -226,6 +226,24 @@ def annealings():
                         st.session_state["x_change_check"] = eje_x
                 #st.session_state[f"int_limits_{i}"] = st.session_state["regs_" + str(i)]
                 #st.session_state["regs_" + str(i)] = st.session_state[f"int_limits_{i}"]
+            if mode == 'MODIFY':
+
+                if f'new_lims_{Ta}' not in st.session_state:
+                    st.session_state[f'new_lims_{Ta}'] = st.session_state["regs_" + str(Ta)]
+                st.session_state["regs_" + str(Ta)] = st.session_state[f'new_lims_{Ta}']
+                with ctr_panel:
+                    slider_limits = st.slider(
+                        "Integration limits",
+                        min_value=big_data[int(Ta)][0][eje_x].min(),
+                        max_value=big_data[int(Ta)][0][eje_x].max(),
+                        value=st.session_state["regs_" + str(Ta)],
+                        key=f'new_lims_{Ta}',
+                        step=(
+                            big_data[int(Ta)][0][eje_x].max()
+                            - big_data[int(Ta)][0][eje_x].min()
+                        )
+                        / 500,
+                    )            
             with ctr_panel:
                 #   Check if you want to show difference plot
                 show_dif = st.checkbox("Show dif")
@@ -263,22 +281,6 @@ def annealings():
                 dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
                 if smooth_dif:
                     dif = savgol_filter(dif, smooth_window, smooth_poly)
-                if f'new_lims_{Ta}' not in st.session_state:
-                    st.session_state[f'new_lims_{Ta}'] = st.session_state["regs_" + str(Ta)]
-                st.session_state["regs_" + str(Ta)] = st.session_state[f'new_lims_{Ta}']
-                with ctr_panel:
-                    slider_limits = st.slider(
-                        "Integration limits",
-                        min_value=big_data[int(Ta)][0][eje_x].min(),
-                        max_value=big_data[int(Ta)][0][eje_x].max(),
-                        value=st.session_state["regs_" + str(Ta)],
-                        key=f'new_lims_{Ta}',
-                        step=(
-                            big_data[int(Ta)][0][eje_x].max()
-                            - big_data[int(Ta)][0][eje_x].min()
-                        )
-                        / 500,
-                    )
             for i in temps:
                         #   Find indices of integration limit in the DataFrame
                 indices = big_data[i][0][eje_x][
