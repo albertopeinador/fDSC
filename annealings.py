@@ -248,6 +248,8 @@ def annealings():
                 #   Check if you want to show difference plot
                 show_dif = st.checkbox("Show dif")
                 smooth_dif = st.checkbox("Smooth dif")
+                if mode == 'MODIFY':
+                    dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
                 #   Difference plot controls in two columns (30% width for scale and 70% for position)
                 scale, delta = st.columns([0.3, 0.7])
                 if show_dif:
@@ -267,20 +269,19 @@ def annealings():
                     with delta:
                         smooth_window = st.slider(
                                 "smooth window",
-                                max_value=60,
+                                max_value=int(len(dif)*.5),
                                 min_value=2,
                                 value=30,
                                 key="smooth_window",
                             )
+                    if smooth_dif:
+                        dif = savgol_filter(dif, smooth_window, smooth_poly)
                 #   Calculate difference between curves
                 # st.write(Ta, type(Ta))
                 #   Divide into three columns: one for each color to define
                 col, ref, shading = st.columns(3)
                 #   Create color pickers in each column for each color
-            if mode == 'MODIFY':
-                dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
-                if smooth_dif:
-                    dif = savgol_filter(dif, smooth_window, smooth_poly)
+            dif_df = pd.DataFrame()
             for i in temps:
                         #   Find indices of integration limit in the DataFrame
                 indices = big_data[i][0][eje_x][
@@ -296,18 +297,30 @@ def annealings():
                 else:
                     y_dif = np.array(y_dif)
 
-                y_dif = y_dif[indices.min()-start_idx: indices.max()-start_idx]
+                y_dif_integrated = y_dif[indices.min()-start_idx: indices.max()-start_idx]
           
                     # nan_indices = y.index[y.isna()].tolist()
                     # y_clean = y.dropna()
                 x = np.array(big_data[i][0]["t"])[indices.min()-start_idx: indices.max()-start_idx]
+                dif_df[f'x_{i}'] = np.array(big_data[i][0]["t"])
+                dif_df[f'dif_{i}'] = y_dif
                 #x_clean = x[~y.isna()]
-                ints.append([i, np.trapz(y_dif, x)])
+                ints.append([i, np.trapz(y_dif_integrated, x)])
                 intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
             color_list = [main_color, ref_color]
             fill_type = ["tonexty", None]
             width = [2, 1.5]
             if mode == 'MODIFY':
+                csv_buffer = StringIO()
+                dif_df.to_csv(csv_buffer, index=False)
+                csv_data = csv_buffer.getvalue()
+                with ctr_panel:
+                    st.download_button(
+                        label="Download dif",
+                        data=csv_data,
+                        file_name='difs.csv',
+                        mime='text/csv'
+                    )
                 for i in [1, 0]:
                     #st.write(i, fill_type[i])
                     fig.add_trace(
