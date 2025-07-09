@@ -27,7 +27,7 @@ def find_int_region(df_tuple, thold, y_name):
     right_index = max_diff_index
     
     # Find left bound
-    while left_index > 0 and dif[left_index] > thold:
+    while left_index > dif.index[0] and dif[left_index] > thold:
         
         left_index -= 1
         
