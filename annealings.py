@@ -28,6 +28,16 @@ def bigdata_to_csv(data_dict):
     # Concatenate all DataFrames horizontally (axis=1)
     final_df = pd.concat(renamed_dfs, axis=1)
 
+    new_order = []
+    group_size = 5
+    for i in range(0, len(final_df.columns), group_size):
+        group = final_df.columns[i:i+group_size]
+        # Expected order: [0, 1, 4, 3, 2]
+        reordered = [group[0], group[1], group[4], group[3], group[2]]
+        new_order.extend(reordered)
+    final_df = final_df[new_order]
+
+
     # Convert final DataFrame to CSV format
     output = StringIO()
     final_df.to_csv(output, index=False)
@@ -516,6 +526,8 @@ def annealings():
                 )
                 * 1.01,
             ]
+
+
             st.download_button(
                     label="Download CSV",
                     data=bigdata_to_csv(big_data),
