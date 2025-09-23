@@ -104,7 +104,7 @@ def step_res():
 
         for har in range(num_of_harmonics):
             har += 1
-            omega_cp = [Cp_rev[i][har] for i in range(len(Cp_rev))] if type_of_cp == 'Reversible' else [-Cp_rev[i][har] for i in range(len(Cp_rev))]
+            omega_cp = [Cp_rev[i][har] for i in range(len(Cp_rev))] if type_of_cp == 'Reversible' else [-Cp_irev[i][har] for i in range(len(Cp_rev))]
             fig.add_trace(
             go.Scatter(
                 x=T,
