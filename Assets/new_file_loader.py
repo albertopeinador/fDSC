@@ -2,7 +2,7 @@ import hashlib
 import re
 import pandas as pd
 from io import StringIO
-import new_filehandler as fh
+import Assets.new_filehandler as fh
 import streamlit as st
 
 # Function to compute the hash of file content
