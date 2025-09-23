@@ -4,10 +4,11 @@ import kinetics
 import annealings
 import welcome
 import coolings
+import step_response
 
 st.set_page_config(layout="wide")
 
-options = ['Welcome', 'Kinetics', 'Annealings', 'Coolings']
+options = ['Welcome', 'Kinetics', 'Annealings', 'Coolings', 'Step Response']
 
 selected = st_navbar(options)
 #selected = st.selectbox('Choose an option', options, placeholder="Choose an option", label_visibility = 'collapsed')
@@ -38,3 +39,5 @@ if selected is not None:
         annealings.annealings()
     elif selected == 'Coolings':
         coolings.coolings()
+    elif selected == 'Step Response':
+        step_response.step_res()

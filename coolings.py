@@ -1,5 +1,5 @@
 import streamlit as st
-import read_generic as read
+import Assets.read_generic as read
 import plotly.graph_objects as go
 import pandas as pd
 from io import StringIO
