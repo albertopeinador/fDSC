@@ -5,6 +5,9 @@ import plotly.graph_objects as go
 import plotly.express as px
 from scipy.fft import fft
 from scipy.signal import savgol_filter
+from io import StringIO
+import csv
+
 
 def derive(x, y):
     x = np.asarray(x)
@@ -29,11 +32,11 @@ def step_res():
     with curves:
         uploaded_file = st.file_uploader("Upload a data file", type=["txt"], label_visibility='collapsed')
 
-        num_of_harmonics = st.number_input('Number of frequencies to plot:', value=10)
+        num_of_harmonics = st.number_input('Number of frequencies to plot:', value=5)
         type_of_cp = st.selectbox('Type of Cp to plot:', ['Reversible', 'Irreversible'])
 
-        smooth_window = st.number_input('Smooth_window', value = 50)
-        poly_order = st.number_input('Smooth_polynomial order', value=2)
+        smooth_window = st.number_input('Smooth_window', value = 10)
+        poly_order = st.number_input('Smooth_polynomial order', value=4)
 
     fig = go.Figure()
     fig2 = go.Figure()
@@ -62,6 +65,8 @@ def step_res():
         END_TEMP = data['Tr'][len(data['Tr'])-1]
         TEMP_STEP = np.abs(data['Tr'][int(1.9*STEP_WINDOW_SIZE)] - START_TEMP)
         NUM_OF_WINDOWS = len(data['Tr']) // STEP_WINDOW_SIZE
+        BASE_FREQ = 1. / (data['t'][STEP_WINDOW_SIZE] - data['t'][POINTS_PER_RAMP])
+
 
         #   SUBSTRACT BASELINE
 
@@ -99,9 +104,28 @@ def step_res():
                             #line_color=color_list[i],
                             mode="lines",
                             #line = dict(color = 'blue', ),
+                            name = "Total Cp"
                         )
                     )
+        plot_data = [T, total_Cp]
+        plot_data_header = ['T','Total Cp']
 
+        total_Cp = savgol_filter(total_Cp, smooth_window, poly_order)
+        total_Cp_deriv = derive(T, total_Cp)
+
+        deriv_data = [T, total_Cp]
+        deriv_data_header = ['T','Total Cp']
+        
+        fig2.add_trace(
+            go.Scatter(
+                x=T,
+                y=total_Cp_deriv,
+                #line_color=color_list[i],
+                mode="lines",
+                name = f'Total Cp'
+            )
+            )
+        
         for har in range(num_of_harmonics):
             har += 1
             omega_cp = [Cp_rev[i][har] for i in range(len(Cp_rev))] if type_of_cp == 'Reversible' else [-Cp_irev[i][har] for i in range(len(Cp_rev))]
@@ -111,8 +135,11 @@ def step_res():
                 y=omega_cp,
                 #line_color=color_list[i],
                 mode="lines",
+                name = f'{har*BASE_FREQ:.2f} Hz'
             )
             )
+            plot_data.append(omega_cp)
+            plot_data_header.append(f'{har*BASE_FREQ:.2f} Hz')
             omega_cp = savgol_filter(omega_cp, smooth_window, poly_order)
             deriv = derive(T, omega_cp)
             fig2.add_trace(
@@ -121,13 +148,54 @@ def step_res():
                 y=deriv,
                 #line_color=color_list[i],
                 mode="lines",
+                name = f'{har*BASE_FREQ:.2f} Hz'
             )
             )
+            deriv_data.append(deriv)
+            deriv_data_header.append(f'{har*BASE_FREQ:.2f} Hz')
+    rows = list(zip(*plot_data))
+    csv_buffer = StringIO()
+    csv_writer = csv.writer(csv_buffer, quoting=csv.QUOTE_MINIMAL)
+    csv_writer.writerow(plot_data_header)
+    csv_writer.writerows(rows)
+    csv_text = csv_buffer.getvalue()
+    csv_buffer.close()
 
+
+    rows_deriv = list(zip(*deriv_data))
+    csv_buffer_deriv = StringIO()
+    csv_writer_deriv = csv.writer(csv_buffer_deriv, quoting=csv.QUOTE_MINIMAL)
+    csv_writer_deriv.writerow(deriv_data_header)
+    csv_writer_deriv.writerows(rows_deriv)
+    csv_text_deriv = csv_buffer_deriv.getvalue()
+    csv_buffer_deriv.close()
+
+    fig.update_layout(
+        title = f"{type_of_cp} Cp",
+        yaxis_title = "Cp",
+        xaxis_title = 'T'
+        )
+    fig2.update_layout(
+        title = f"Derivative of {type_of_cp} Cp",
+        yaxis_title = "dCp / dT",
+        xaxis_title = 'T',
+        xaxis=dict(visible=True),
+        yaxis=dict(visible=True),
+        )
     with plot1:
         st.plotly_chart(fig, use_container_width = True)
+        st.download_button(label="Download Cp CSV",
+                            data=csv_text,                # <-- plain string is fine
+                            file_name=f"{uploaded_file.name}_Cp_data.csv",
+                            mime="text/csv",
+                        )
     with plot2:
         st.plotly_chart(fig2, use_container_width = True)
+        st.download_button(label="Download Derivative CSV",
+                            data=csv_text_deriv,                # <-- plain string is fine
+                            file_name=f"{uploaded_file.name}_Cp_derivative_data.csv",
+                            mime="text/csv",
+                        )
 
         
     #     with curves:
