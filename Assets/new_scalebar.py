@@ -7,8 +7,8 @@ def add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=1.0, barcolor='blac
     sizey = np.diff(yaxis_range)[0] / 5 * scale_factor  # Dynamically set based on y-axis range and scaling factor
 
     # Set the position for the vertical scale bar in the top-left corner
-    x_offset = xaxis_range[0] + (np.diff(xaxis_range)[0] * 0.05)  # Slightly to the right of the x min value
-    y_offset = yaxis_range[1] - (np.diff(yaxis_range)[0] * 0.1)  # Slightly below the max y value (for padding)
+    x_offset = xaxis_range[0] - (np.diff(xaxis_range)[0] * 0.03)  # Slightly to the right of the x min value
+    y_offset = yaxis_range[1] - (np.diff(yaxis_range)[0] * 0.03)  # Slightly below the max y value (for padding)
 
     # Add the vertical scale bar
     fig.add_shape(

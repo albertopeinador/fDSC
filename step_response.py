@@ -33,7 +33,7 @@ def step_res():
         uploaded_file = st.file_uploader("Upload a data file", type=["txt"], label_visibility='collapsed')
 
         num_of_harmonics = st.number_input('Number of frequencies to plot:', value=5)
-        type_of_cp = st.selectbox('Type of Cp to plot:', ['Reversible', 'Irreversible'])
+        type_of_cp = st.selectbox('Type of Cp to plot:', ['Reversing', 'Non-Reversing'])
 
         smooth_window = st.number_input('Smooth_window', value = 10)
         poly_order = st.number_input('Smooth_polynomial order', value=4)
@@ -128,7 +128,7 @@ def step_res():
         
         for har in range(num_of_harmonics):
             har += 1
-            omega_cp = [Cp_rev[i][har] for i in range(len(Cp_rev))] if type_of_cp == 'Reversible' else [-Cp_irev[i][har] for i in range(len(Cp_rev))]
+            omega_cp = [Cp_rev[i][har] for i in range(len(Cp_rev))] if type_of_cp == 'Reversing' else [-Cp_irev[i][har] for i in range(len(Cp_rev))]
             fig.add_trace(
             go.Scatter(
                 x=T,

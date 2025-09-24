@@ -6,3 +6,5 @@
 !Assets/
 !Assets/*.py
 !*.py
+!Assets/screenshots/
+!Assets/screenshots/*.png
