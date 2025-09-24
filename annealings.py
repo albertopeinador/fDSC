@@ -527,13 +527,13 @@ def annealings():
                 * 1.01,
             ]
 
-
-            st.download_button(
-                    label="Download CSV",
-                    data=bigdata_to_csv(big_data),
-                    file_name="data_output.csv",
-                    mime="text/csv"
-                                )
+            with ctr_panel:
+                st.download_button(
+                        label="Download CSV",
+                        data=bigdata_to_csv(big_data),
+                        file_name="data_output.csv",
+                        mime="text/csv"
+                                    )
             #st.dataframe(big_data)
             for i in temps:
                 color_list = [main_color, ref_color]
