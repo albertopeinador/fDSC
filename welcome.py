@@ -1,25 +1,15 @@
 import streamlit as st
 import base64
 
-with open("Assets/screenshots/annealing_modify.png", "rb") as f:
-    img_bytes = f.read()
+full_ratio = 1788/1722
+modify_ratio = 3010/1722
 
-b64 = base64.b64encode(img_bytes).decode()
-src_modify = f"data:image/png;base64,{b64}"
-
-with open("Assets/screenshots/annealing_full.png", "rb") as f:
-    img_bytes = f.read()
-
-b64 = base64.b64encode(img_bytes).decode()
-src_full = f"data:image/png;base64,{b64}"
-
-with open("Assets/screenshots/step_response.png", "rb") as f:
-    img_bytes = f.read()
-
-b64 = base64.b64encode(img_bytes).decode()
-src_step_res = f"data:image/png;base64,{b64}"
+left_width = 0.85*full_ratio/(full_ratio+modify_ratio)
+right_width = 0.85*modify_ratio/(full_ratio+modify_ratio)
 
 def welcome():
+
+
     st.markdown(f"""
         <div style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: transparent;">
             <div style="width: 85%; margin: auto; padding-top: 20px;">
@@ -47,16 +37,30 @@ def welcome():
                                             <li>Reference curves must have the suffix '_ref' before the file format.
                                             </ul>
                                             Functionality is almost complete. It separates and displays curves to properly inspect them. Allows you to fix overlap with the reference curve and integration limits for the enthalpy curve by curve. It is also posible to export all data, from enthalpies, to overlapped and separated curves and differences with the references.
-                        <div style="font-size: 3em; text-align: center; margin-bottom: 20px;">
-                            <img src="{src_full}" width=35%>  <img src="{src_modify}" width=58.92%>
-                        </div>
-                        <li> <b>Coolings:</b> Mostly a quality of life tool to separate cooling measurements containing many curves laid out one after another into different columns.
-                        <li> <b>Step Response:</b> As the name says; a tool to process step response experiments to calculate C<sub>p</sub> and separate it into reversing and non-reversing at different frequencies (given by experiment parameters).
-                                                <div style="font-size: 3em; text-align: center; margin-bottom: 20px;">
-                            <img src="{src_step_res}" width=67.42%> <br>
-                        </div>
                     </ul>
                     </p>
                
         </div>
     """, unsafe_allow_html=True)
+
+    _, left, right, _ = st.columns([0.075,left_width, right_width,0.075], gap='small')
+    with left:
+        st.image("static/screenshots/annealing_full.png", caption = 'Screenshot of the automatic curve separation')
+    with right:
+        st.image("static/screenshots/annealing_modify.png", caption = 'Screenshot of manual overlap adjustment and real-time integrals')
+    st.markdown('''
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: transparent;">
+                    <div style="width: 85%; margin: auto; padding-top: 5px;">
+                        <div style="font-size: 1em; text-align: justify;">
+                            <ul>
+                                <li> <b>Coolings:</b> Mostly a quality of life tool to separate cooling measurements containing many curves laid out one after another into different columns.
+                                <li> <b>Step Response:</b>  As the name says; a tool to process step response experiments to calculate Cp and separate it into reversing and non-reversing at different frequencies (given by experiment parameters).
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                ''', unsafe_allow_html=True)
+    _, right, _ = st.columns([0.075,0.85,0.075])
+    with right:
+        st.image("static/screenshots/step_response.png", caption = 'Example of a processed step response experiment.')
+
