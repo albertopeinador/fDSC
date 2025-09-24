@@ -115,7 +115,7 @@ def step_res():
 
         deriv_data = [T, total_Cp]
         deriv_data_header = ['T','Total Cp']
-        
+
         fig2.add_trace(
             go.Scatter(
                 x=T,
@@ -153,49 +153,49 @@ def step_res():
             )
             deriv_data.append(deriv)
             deriv_data_header.append(f'{har*BASE_FREQ:.2f} Hz')
-    rows = list(zip(*plot_data))
-    csv_buffer = StringIO()
-    csv_writer = csv.writer(csv_buffer, quoting=csv.QUOTE_MINIMAL)
-    csv_writer.writerow(plot_data_header)
-    csv_writer.writerows(rows)
-    csv_text = csv_buffer.getvalue()
-    csv_buffer.close()
+        rows = list(zip(*plot_data))
+        csv_buffer = StringIO()
+        csv_writer = csv.writer(csv_buffer, quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerow(plot_data_header)
+        csv_writer.writerows(rows)
+        csv_text = csv_buffer.getvalue()
+        csv_buffer.close()
 
 
-    rows_deriv = list(zip(*deriv_data))
-    csv_buffer_deriv = StringIO()
-    csv_writer_deriv = csv.writer(csv_buffer_deriv, quoting=csv.QUOTE_MINIMAL)
-    csv_writer_deriv.writerow(deriv_data_header)
-    csv_writer_deriv.writerows(rows_deriv)
-    csv_text_deriv = csv_buffer_deriv.getvalue()
-    csv_buffer_deriv.close()
+        rows_deriv = list(zip(*deriv_data))
+        csv_buffer_deriv = StringIO()
+        csv_writer_deriv = csv.writer(csv_buffer_deriv, quoting=csv.QUOTE_MINIMAL)
+        csv_writer_deriv.writerow(deriv_data_header)
+        csv_writer_deriv.writerows(rows_deriv)
+        csv_text_deriv = csv_buffer_deriv.getvalue()
+        csv_buffer_deriv.close()
 
-    fig.update_layout(
-        title = f"{type_of_cp} Cp",
-        yaxis_title = "Cp",
-        xaxis_title = 'T'
-        )
-    fig2.update_layout(
-        title = f"Derivative of {type_of_cp} Cp",
-        yaxis_title = "dCp / dT",
-        xaxis_title = 'T',
-        xaxis=dict(visible=True),
-        yaxis=dict(visible=True),
-        )
-    with plot1:
-        st.plotly_chart(fig, use_container_width = True)
-        st.download_button(label="Download Cp CSV",
-                            data=csv_text,                # <-- plain string is fine
-                            file_name=f"{uploaded_file.name}_Cp_data.csv",
-                            mime="text/csv",
-                        )
-    with plot2:
-        st.plotly_chart(fig2, use_container_width = True)
-        st.download_button(label="Download Derivative CSV",
-                            data=csv_text_deriv,                # <-- plain string is fine
-                            file_name=f"{uploaded_file.name}_Cp_derivative_data.csv",
-                            mime="text/csv",
-                        )
+        fig.update_layout(
+            title = f"{type_of_cp} Cp",
+            yaxis_title = "Cp",
+            xaxis_title = 'T'
+            )
+        fig2.update_layout(
+            title = f"Derivative of {type_of_cp} Cp",
+            yaxis_title = "dCp / dT",
+            xaxis_title = 'T',
+            xaxis=dict(visible=True),
+            yaxis=dict(visible=True),
+            )
+        with plot1:
+            st.plotly_chart(fig, use_container_width = True)
+            st.download_button(label="Download Cp CSV",
+                                data=csv_text,                # <-- plain string is fine
+                                file_name=f"{uploaded_file.name}_Cp_data.csv",
+                                mime="text/csv",
+                            )
+        with plot2:
+            st.plotly_chart(fig2, use_container_width = True)
+            st.download_button(label="Download Derivative CSV",
+                                data=csv_text_deriv,                # <-- plain string is fine
+                                file_name=f"{uploaded_file.name}_Cp_derivative_data.csv",
+                                mime="text/csv",
+                            )
 
         
     #     with curves:
