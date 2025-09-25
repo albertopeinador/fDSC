@@ -8,6 +8,8 @@
 !*.py
 !Assets/screenshots/
 !Assets/screenshots/*.png
+!.streamlit/
+!.streamlit/config.toml
 !static/
 !static/screenshots
 !static/*/*.png
