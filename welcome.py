@@ -3,9 +3,12 @@ import base64
 
 full_ratio = 1788/1722
 modify_ratio = 3010/1722
+step_ratio = 2764/1382
 
 left_width = 0.85*full_ratio/(full_ratio+modify_ratio)
 right_width = 0.85*modify_ratio/(full_ratio+modify_ratio)
+step_width = 0.85*step_ratio/(full_ratio+step_ratio)
+step_margin = (1. - step_width)/2
 
 def welcome():
 
@@ -43,7 +46,7 @@ def welcome():
         </div>
     """, unsafe_allow_html=True)
 
-    _, left, right, _ = st.columns([0.075,left_width, right_width,0.075], gap='small')
+    _, left, right, _ = st.columns([0.075,left_width+0.004, right_width,0.075], gap='small')
     with left:
         st.image("static/screenshots/annealing_full.png", caption = 'Screenshot of the automatic curve separation')
     with right:
@@ -60,7 +63,7 @@ def welcome():
                     </div>
                 </div>
                 ''', unsafe_allow_html=True)
-    _, right, _ = st.columns([0.075,0.85,0.075])
+    _, right, _ = st.columns([step_margin, step_width, step_margin])
     with right:
         st.image("static/screenshots/step_response.png", caption = 'Example of a processed step response experiment.')
 
