@@ -13,3 +13,4 @@
 !static/
 !static/screenshots
 !static/*/*.png
+nav_test.py
