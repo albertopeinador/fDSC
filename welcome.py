@@ -25,7 +25,7 @@ def welcome():
                 <div style="font-size: 1em; text-align: justify;">
                     <p>
                         Welcome! This program is designed to assist with processing data for <span style="font-weight: bold; color: #0073e6;">Flash Differential Scanning Calorimetry</span> (FDSC).
-                        You can explore the various tools available by navigating through the tabs at the top of the page.
+                        You can explore the various tools available by navigating through the tabs in the sidebar (expand in the top left).
                         These tabs provide access to different types of measurements we currently support—although please note that most are still a work in progress (WIP).
                     </p>
                     <p>
@@ -33,7 +33,6 @@ def welcome():
                     </p>
                     <p>
                     <ul>
-                        <li><b>Kinetics:</b> Reads the data and auto-generates a baseline, then integrates to find the enthalpy. If a temperature list is provided, then it plots enthalpy vs temperature.
                         <li><b>Annealings:</b> Reads all files and automatically detects reference and measurement curves, pairing them by filename. Therefore, file naming is key:<ul>
                                             <li>It must contain the temperature of the previous annealing immediately followed by either 'deg' or 'degree'.
                                             <li>Annealings at temperatures below 0 ºC will be indicated with the word 'minus' before annealing temperature.
@@ -56,7 +55,6 @@ def welcome():
                     <div style="width: 85%; margin: auto; padding-top: 5px;">
                         <div style="font-size: 1em; text-align: justify;">
                             <ul>
-                                <li> <b>Coolings:</b> Mostly a quality of life tool to separate cooling measurements containing many curves laid out one after another into different columns.
                                 <li> <b>Step Response:</b>  As the name says; a tool to process step response experiments to calculate Cp and separate it into reversing and non-reversing at different frequencies (given by experiment parameters).
                             </ul>
                         </div>
@@ -67,3 +65,15 @@ def welcome():
     with right:
         st.image("static/screenshots/step_response.png", caption = 'Example of a processed step response experiment.')
 
+    st.markdown('''
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: transparent;">
+                    <div style="width: 85%; margin: auto; padding-top: 5px;">
+                        <div style="font-size: 1em; text-align: justify;">
+                            <ul>
+                                <li> <b>Kinetics:</b> Reads the data and auto-generates a baseline, then integrates to find the enthalpy. If a temperature list is provided, then it plots enthalpy vs temperature.
+                                <li> <b>Coolings:</b> Mostly a quality of life tool to separate cooling measurements containing many curves laid out one after another into different columns.
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                ''', unsafe_allow_html=True)
