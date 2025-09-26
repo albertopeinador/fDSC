@@ -2,3 +2,4 @@ streamlit
 matplotlib
 plotly
 scipy
+streamlit_js_eval

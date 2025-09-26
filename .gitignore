@@ -6,11 +6,12 @@
 !Assets/
 !Assets/*.py
 !*.py
-!Assets/screenshots/
-!Assets/screenshots/*.png
 !.streamlit/
 !.streamlit/config.toml
 !static/
 !static/screenshots
+!static/icons
 !static/*/*.png
+!static/*/*.svg
 nav_test.py
+fdsc_test.py

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(0.952178,0,0,0.952178,0.730237,0.863836)">
+        <path d="M32.053,10.131L32.053,21.662C32.053,27.319 27.46,31.912 21.802,31.912L10.271,31.912C4.614,31.912 0.021,27.319 0.021,21.662L0.021,10.131C0.021,4.473 4.614,-0.12 10.271,-0.12L21.802,-0.12C27.46,-0.12 32.053,4.473 32.053,10.131Z" style="fill:none;stroke:black;stroke-width:2.19px;"/>
+    </g>
+    <g transform="matrix(6.1149e-17,-1,1,6.1149e-17,-13.8352,32.062)">
+        <text x="5.999px" y="41.658px" style="font-family:'Menlo-Regular', 'Menlo', monospace;font-size:33.333px;">❄</text>
+    </g>
+</svg>

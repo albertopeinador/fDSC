@@ -1,53 +1,28 @@
 import streamlit as st
-# from streamlit_navigation_bar import st_navbar
-import kinetics
-import annealings
-import welcome
-import coolings
-import step_response
+import kinetics, annealings, welcome, coolings, step_response
+import base64
+
+def svg_to_base64(path: str) -> str:
+    """Read an SVG file and return a base64-encoded data URI string."""
+    with open(path, "rb") as f:
+        svg_bytes = f.read()
+    b64 = base64.b64encode(svg_bytes).decode("utf-8")
+    return f"data:image/svg+xml;base64,{b64}"
+
+
+
 
 st.set_page_config(layout="wide")
 
-options = ['Welcome', 'Kinetics', 'Annealings', 'Coolings', 'Step Response']
-
-# selected = st_navbar(options)
-
-# if selected is not None:
-#     if selected == 'Welcome':
-#         welcome.welcome()
-#     elif selected == 'Kinetics':
-#         with st.expander('Load Data', expanded = True):
-#             og_file = st.file_uploader('Upload Files',
-#                                        accept_multiple_files = False,
-#                                        label_visibility = 'collapsed',
-#                                        type = ['csv'])
-#             if og_file is not None:
-#                 try:
-#                     curvas = kinetics.get_names(og_file)
-#                 except TypeError:
-#                     st.write('Upload file please')
-#         if og_file is not None:
-#             try:
-#                 df = kinetics.read_kinetics(og_file, curvas)
-#                 kinetics.kinetics(df, og_file.name)
-#             except NameError:
-#                 st.write('Enter curve names or use default by switching \'As table\' toggle on.')
-#         else:
-#             st.write('Please Load File')
-#     elif selected == 'Annealings':
-#         annealings.annealings()
-#     elif selected == 'Coolings':
-#         coolings.coolings()
-#     elif selected == 'Step Response':
-#         step_response.step_res()
-
-
+# --- Tab functions ---
 def full_kin():
-    with st.expander('Load Data', expanded = True):
-        og_file = st.file_uploader('Upload Files',
-                                    accept_multiple_files = False,
-                                    label_visibility = 'collapsed',
-                                    type = ['csv'])
+    with st.expander('Load Data', expanded=True):
+        og_file = st.file_uploader(
+            'Upload Files',
+            accept_multiple_files=False,
+            label_visibility='collapsed',
+            type=['csv']
+        )
         if og_file is not None:
             try:
                 curvas = kinetics.get_names(og_file)
@@ -58,48 +33,87 @@ def full_kin():
             df = kinetics.read_kinetics(og_file, curvas)
             kinetics.kinetics(df, og_file.name)
         except NameError:
-            st.write('Enter curve names or use default by switching \'As table\' toggle on.')
+            st.write("Enter curve names or use default by switching 'As table' toggle on.")
     else:
         st.write('Please Load File')
 
-# ---- Sidebar Tiny Tab Switcher ----
+tabs = {
+    "Welcome": welcome.welcome,
+    "Kinetics": full_kin,
+    "Annealings": annealings.annealings,
+    "Coolings": coolings.coolings,
+    "Step Response": step_response.step_res,
+}
 
-# Set sidebar width using custom CSS
+# --- Sidebar CSS ---
 st.markdown("""
     <style>
         [data-testid="stSidebar"] {
-            width: 1rem;
-            min-width: 1rem;
+            width: 3.5rem !important;   /* very narrow */
+            min-width: 3.5rem !important;
         }
-        [data-testid="stSidebar"] .css-1d391kg {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
+        .sidebar-icons {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            height: 100%;
         }
-        .sidebar-icon {
-            font-size: 1.5rem;
-            text-align: center;
-            display: block;
-            padding: 1rem 0;
+        .sidebar-icons img {
+            width: 2.9rem;
+            height: 2.9rem;
+            margin: .5rem 0;
+            cursor: pointer;
+            
+            transition: transform 0.2s ease;
+        }
+        .sidebar-icons img:hover {
+            transform: scale(1.1);
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Tab options: icon + name
-tabs = {
-    "Welcome": welcome.welcome,
-    "Annealings": annealings.annealings,
-    "Step Response": step_response.step_res,
-    "Kinetics": full_kin,
-    "Coolings":coolings.coolings
+# --- Sidebar nav with SVGs ---
+icons = {
+    "Welcome": "static/icons/welcome_icon.svg",
+    "Annealings": "static/icons/anneal_icon.svg",
+    "Step Response": "static/icons/step_icon.svg",
+    "Kinetics": "static/icons/kinetic_icon.svg",
+    "Coolings": "static/icons/cooling_icon.svg",
 }
 
-# Create tab switcher in sidebar using radio (icons only)
-selection = st.sidebar.radio(
-    label="",
-    options=list(tabs.keys()),
-    #format_func=lambda x: "",  # Hide label text
-    index=0
+from streamlit_js_eval import get_geolocation, streamlit_js_eval
+
+theme = streamlit_js_eval(
+    js_expressions="window.matchMedia('(prefers-color-scheme: dark)').matches"
 )
 
-# Run the selected tab function
-tabs[selection]()
+
+# Create placeholders for navigation
+choice = st.sidebar.empty()
+
+# Build custom HTML with clickable links
+icon_html = '<div class="sidebar-icons">'
+for tab in icons.keys():
+    url = f"?nav={tab}"  # store selection in query params
+    icon_path = icons[tab] if not theme else icons[tab][:-4] + '_dark' + '.svg'
+    icon_b64 = svg_to_base64(icon_path)
+    icon_html += f'<a href="{url}"><img src="{icon_b64}" title="{tab}"></a>'
+icon_html += "</div>"
+
+st.sidebar.markdown(icon_html, unsafe_allow_html=True)
+
+
+
+# --- Detect selected tab ---
+import urllib.parse
+
+# when building the href:
+href = f"?nav={urllib.parse.quote_plus(tab)}"
+
+# when reading:
+params = st.query_params
+if 'nav' not in params:
+    params['nav'] = 'Welcome'
+
+tabs[params['nav']]()

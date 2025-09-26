@@ -1,5 +1,4 @@
 import streamlit as st
-import base64
 
 full_ratio = 1788/1722
 modify_ratio = 3010/1722
@@ -16,7 +15,7 @@ def welcome():
     st.markdown(f"""
         <div style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: transparent;">
             <div style="width: 85%; margin: auto; padding-top: 20px;">
-                <div style="font-size: 3em; text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 3em; text-align: center; margin-bottom: 20px; margin-top: -100px">
                     JM / F-DSC
                 </div>
                 <div style="font-size: 1.3em; text-align:center; margin-bottom: 20px;">
