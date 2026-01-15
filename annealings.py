@@ -315,7 +315,7 @@ def annealings():
                 dif_df[f'x_{i}'] = np.array(big_data[i][0]["t"])
                 dif_df[f'dif_{i}'] = y_dif
                 #x_clean = x[~y.isna()]
-                ints.append([i, np.trapz(y_dif_integrated, x)])
+                ints.append([i, np.trapezoid(y_dif_integrated, x)])
                 intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
             color_list = [main_color, ref_color]
             fill_type = ["tonexty", None]
@@ -468,7 +468,7 @@ def annealings():
                     + m
                     * big_data[temps[-1]][1]["t"][norm_indices.min() - start_index: norm_indices.max() - start_index]
                 )
-                norm_value = np.trapz(
+                norm_value = np.trapezoid(
                     big_data[temps[-1]][1]["Heat Flow"][
                         norm_indices.min() - start_index : norm_indices.max() - start_index
                     ]
@@ -507,10 +507,22 @@ def annealings():
             #   move down relative to the previous curve, so the loop starts with the second curve and moves
             for i in range(1, len(big_data)):
                 #   Calculate the difference between consecutive Ta curves - the minimum separation required
-                dif = abs(
+                dif = max(abs(
                     big_data[temps[i]][0]["Heat Flow"]
                     - big_data[temps[i - 1]][0]["Heat Flow"]
-                ).max()
+                ).max(),
+                abs(
+                    big_data[temps[i]][1]["Heat Flow"]
+                    - big_data[temps[i - 1]][1]["Heat Flow"]
+                ).max(),
+                abs(
+                    big_data[temps[i]][0]["Heat Flow"]
+                    - big_data[temps[i - 1]][1]["Heat Flow"]
+                ).max(),
+                abs(
+                    big_data[temps[i]][1]["Heat Flow"]
+                    - big_data[temps[i - 1]][0]["Heat Flow"]
+                ).max(),)
                 #   Move both main and reference curves down by
                 big_data[temps[i]][0]["Heat Flow"] -= dif + margin
                 big_data[temps[i]][1]["Heat Flow"] -= dif + margin
