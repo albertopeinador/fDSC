@@ -584,7 +584,7 @@ def annealings():
             with inte:
                 fig2.update_traces(marker=dict(color=intsdf["cols"], size=10))
                 fig2.update_layout(showlegend=False)
-                st.plotly_chart(fig2, use_container_width = True, **{"config": config})
+                st.plotly_chart(fig2, width = 'stretch', **{"config": config})
                 _, dwl_ent, _ = st.columns([0.7, 1, 0.7])
                 result_string = "\n".join(
                     f"{row['temps']}\t{row['enthalpies']}"
@@ -604,7 +604,7 @@ def annealings():
             xaxis_title=eje_x,
         )
         with graf:
-            st.plotly_chart(fig, use_container_width = True, **{"config": config})
+            st.plotly_chart(fig, width = 'stretch', **{"config": config})
     except IndexError:
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)

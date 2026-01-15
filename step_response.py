@@ -183,14 +183,14 @@ def step_res():
             yaxis=dict(visible=True),
             )
         with plot1:
-            st.plotly_chart(fig, use_container_width = True)
+            st.plotly_chart(fig, width = 'stretch')
             st.download_button(label="Download Cp CSV",
                                 data=csv_text,                # <-- plain string is fine
                                 file_name=f"{uploaded_file.name}_Cp_data.csv",
                                 mime="text/csv",
                             )
         with plot2:
-            st.plotly_chart(fig2, use_container_width = True)
+            st.plotly_chart(fig2, width = 'stretch')
             st.download_button(label="Download Derivative CSV",
                                 data=csv_text_deriv,                # <-- plain string is fine
                                 file_name=f"{uploaded_file.name}_Cp_derivative_data.csv",

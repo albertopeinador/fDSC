@@ -265,7 +265,7 @@ def kinetics(df, filename):  # Proper processing
             "Download Integrals",
             data=intes_csv,
             file_name=filename[:-4] + "_integrals.csv",
-            use_container_width=True,
+            width='stretch',
         )
 
     try:  #   To create integrals plot, error handling for str names instead of floats
@@ -288,7 +288,7 @@ def kinetics(df, filename):  # Proper processing
         intes.update_traces(marker=dict(color=cols, size=8))
 
         with left:
-            st.plotly_chart(intes, use_container_width=True)  #    Show integrals plot
+            st.plotly_chart(intes, width='stretch')  #    Show integrals plot
     except:  #   Could not convert names to floats
         with left:
             st.write("Names cant be converted into float to plot")
@@ -298,4 +298,4 @@ def kinetics(df, filename):  # Proper processing
     currentfig.update_layout(height=600, xaxis_title="time")
 
     with right:
-        st.plotly_chart(currentfig, use_container_width=True)  #   Show main plot
+        st.plotly_chart(currentfig, width='stretch')  #   Show main plot

@@ -83,7 +83,7 @@ def coolings():
                             fig.add_trace(go.Scatter(x = datas[i][ejex], y = datas[i]['Value']))
                     else:
                         fig.add_trace(go.Scatter(x = datas[ejex], y = datas['Value']))
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
 
             with curves:
                 _, dwl, _ = st.columns([.3, 1, .3])
@@ -146,6 +146,6 @@ def coolings():
                 mod_filtered_dict[i] = filtered_dict[i]
                 mod_filtered_dict[i]["Value"] += (st.session_state[f"delta_{i}"]) * mod_filtered_dict[i]["Value"].max()
             fig2.add_trace(go.Scatter(x = mod_filtered_dict[i][ejex], y = mod_filtered_dict[i]['Value']))
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width='stretch')
             #st.line_chart(mod_filtered_dict, x = ejex, y=filtered_dict[i]['Value'])
                         #st.write(result)
