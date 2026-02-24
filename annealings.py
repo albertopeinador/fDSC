@@ -10,6 +10,9 @@ import plotly.graph_objects as go
 import plotly.express as px
 from matplotlib.colors import rgb2hex
 from io import StringIO
+import warnings
+
+warnings.filterwarnings("ignore")
 
 def bigdata_to_csv(data_dict):
     # List to hold all DataFrames after renaming
@@ -500,6 +503,7 @@ def annealings():
             #   Code for MAIN plot with all the curves
             #   Define the margin using the previously defined margin_step by multiplying the step times
             #   the difference between max and min of first curve
+            # st.write(big_data[temps[0]][1])
             margin = margin_step * (
                 float(big_data[temps[0]][1]["Heat Flow"].max())
                 - float(big_data[temps[0]][1]["Heat Flow"].min())
@@ -584,7 +588,7 @@ def annealings():
             with inte:
                 fig2.update_traces(marker=dict(color=intsdf["cols"], size=10))
                 fig2.update_layout(showlegend=False)
-                st.plotly_chart(fig2, width = 'stretch', **{"config": config})
+                st.plotly_chart(fig2,  config={'responsive':True})
                 _, dwl_ent, _ = st.columns([0.7, 1, 0.7])
                 result_string = "\n".join(
                     f"{row['temps']}\t{row['enthalpies']}"
@@ -604,7 +608,7 @@ def annealings():
             xaxis_title=eje_x,
         )
         with graf:
-            st.plotly_chart(fig, width = 'stretch', **{"config": config})
+            st.plotly_chart(fig, config={'responsive':True})#width = 'container', **{"config": config})
     except IndexError:
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)

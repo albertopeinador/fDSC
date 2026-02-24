@@ -1,5 +1,6 @@
 import re
 import bisect as bi
+import streamlit as st
 #import pandas as pd
 
 def modify_text_file(file_content):
@@ -33,8 +34,13 @@ def files_to_dict(files_upload, file_names):
     if files_upload is not None:
         # Iterate over the files using both content and name
         for file_content, file_name in zip(files_upload, file_names):
+            
             # Use file name to extract temperature info
-            match = re.search(r'_(minus|-)?(\d+)\s*(degree|deg|ºC|_)(ref|r|Referencia)?(_modified)?', file_name)
+            match = list(re.finditer(r'(minus|-)?(\d+)\s*(degree|deg|_|ºC)(_ref|r|_Referencia)?(_modified)?', file_name))
+            if len(match)>1:
+                match = match[1]
+            else:
+                match=match[0]
             if match:
                 if match.group(5):
                     continue
@@ -45,12 +51,15 @@ def files_to_dict(files_upload, file_names):
                 if number not in temps_files:
                     temps_files[number] = [None, None]
                     bi.insort(temps, number)
-                
+                # st.write(number)
                 # Use file content in the corresponding slots instead of file objects
-                if match.group(4):  # ref file
-                    temps_files[number][1] = file_content
-                else:  # regular file
+                if match.group(4) == None:  # ref file
                     temps_files[number][0] = file_content
+                
+                else:  # regular file
+                    temps_files[number][1] = file_content
+                
+                    
 
     return temps, temps_files
 

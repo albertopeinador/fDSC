@@ -1,6 +1,10 @@
 import streamlit as st
 import kinetics, annealings, welcome, coolings, step_response
 import base64
+import warnings
+warnings.filterwarnings("ignore")
+warnings.simplefilter("ignore")
+
 
 def svg_to_base64(path: str) -> str:
     """Read an SVG file and return a base64-encoded data URI string."""
