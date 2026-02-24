@@ -34,7 +34,7 @@ def files_to_dict(files_upload, file_names):
         # Iterate over the files using both content and name
         for file_content, file_name in zip(files_upload, file_names):
             # Use file name to extract temperature info
-            match = re.search(r'_(minus|-)?(\d+)\s*(degree|deg|_)(ref|r)?(_modified)?', file_name)
+            match = re.search(r'_(minus|-)?(\d+)\s*(degree|deg|ºC|_)(ref|r|Referencia)?(_modified)?', file_name)
             if match:
                 if match.group(5):
                     continue
