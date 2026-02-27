@@ -93,7 +93,13 @@ def annealings():
                 type=["txt"],
                 label_visibility="collapsed",
             )
+
             eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
+            reverse_col, grid_col = st.columns([.7, .3])
+            with reverse_col:
+                reverse_temp = st.checkbox('Flip temperatures')
+            with grid_col:
+                toggle_grid = st.checkbox('Grid')
             load_start, load_end = st.columns(2)
             if eje_x == "t":
                 with load_start:
@@ -404,7 +410,7 @@ def annealings():
             yaxis_range = [
                 min(min(big_data[Ta][0]["Heat Flow"]), min(big_data[Ta][1]["Heat Flow"]))
                 * 0.98,
-                max(max(big_data[Ta][0]["Heat Flow"]), max(big_data[Ta][1]["Heat Flow"]))
+                np.abs(max(max(big_data[Ta][0]["Heat Flow"]), max(big_data[Ta][1]["Heat Flow"])))
                 * 1.01,
             ]
         if mode == "NORMALIZE":
@@ -527,9 +533,14 @@ def annealings():
                     big_data[temps[i]][1]["Heat Flow"]
                     - big_data[temps[i - 1]][0]["Heat Flow"]
                 ).max(),)
-                #   Move both main and reference curves down by
-                big_data[temps[i]][0]["Heat Flow"] -= dif + margin
-                big_data[temps[i]][1]["Heat Flow"] -= dif + margin
+                if not reverse_temp:
+                    #   Move both main and reference curves down by
+                    big_data[temps[i]][0]["Heat Flow"] -= dif + margin
+                    big_data[temps[i]][1]["Heat Flow"] -= dif + margin
+                else:
+                    #   Shift curve up
+                    big_data[temps[i]][0]["Heat Flow"] += dif + margin
+                    big_data[temps[i]][1]["Heat Flow"] += dif + margin
             yaxis_range = [
                 min(
                     min(big_data[temps[-1]][0]["Heat Flow"]),
@@ -541,7 +552,17 @@ def annealings():
                     max(big_data[temps[0]][1]["Heat Flow"]),
                 )
                 * 1.01,
-            ]
+            ] if not reverse_temp else [
+                min(
+                    min(big_data[temps[0]][0]["Heat Flow"]),
+                    min(big_data[temps[0]][1]["Heat Flow"]),
+                )
+                * 0.98,
+                max(
+                    max(big_data[temps[-1]][0]["Heat Flow"]),
+                    max(big_data[temps[-1]][1]["Heat Flow"]),
+                )
+                * 1.01,]
 
             with ctr_panel:
                 st.download_button(
@@ -584,6 +605,20 @@ def annealings():
                     )
                 #   Plot the labels on each curve
                 fig.update_traces(textposition="middle right")
+                fig.update_xaxes(
+                                showline=True,
+                                ticks='outside',
+                                tickcolor='black',
+                                minor=dict(ticklen=2))
+                if toggle_grid:
+                    fig.update_xaxes(
+                        showgrid=True,
+                        gridcolor="#C7C7C7",
+                        griddash='dash',
+                        minor_griddash='dash',
+
+                    )
+
         if mode != "FULL":
             with inte:
                 fig2.update_traces(marker=dict(color=intsdf["cols"], size=10))
@@ -599,14 +634,24 @@ def annealings():
         #   Show main graph
         xaxis_range = [load_begin * 0.98, load_fin * 1.05]
         sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
-        fig.update_layout(
-            showlegend=False,
-            height=700,
-            margin=dict(l=10, r=10, t=10, b=10),
-            xaxis=dict(visible=True),
-            yaxis=dict(visible=False),
-            xaxis_title=eje_x,
-        )
+        if eje_x != 't':
+            fig.update_layout(
+                showlegend=False,
+                height=700,
+                margin=dict(l=10, r=10, t=10, b=10),
+                xaxis=dict(visible=True),
+                yaxis=dict(visible=False),
+                xaxis_title='Temperature / ºC',
+            )
+        else:
+                    fig.update_layout(
+                showlegend=False,
+                height=700,
+                margin=dict(l=10, r=10, t=10, b=10),
+                xaxis=dict(visible=True),
+                yaxis=dict(visible=False),
+                xaxis_title='Time / s',
+            )
         with graf:
             st.plotly_chart(fig, config={'responsive':True})#width = 'container', **{"config": config})
     except IndexError:
