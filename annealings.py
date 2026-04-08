@@ -94,7 +94,7 @@ def annealings():
     #   Create the three main columns - one for main controls, one for the plots
     #       and one last one for the integrals plot and some adicional controls
 
-    ctr_panel, graf, inte = st.columns([3, 4, 4])
+    ctr_panel, graf, inte = st.columns([3, 3, 4])
 
     #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
     #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
@@ -361,6 +361,8 @@ def annealings():
                         file_name=f'{chip_name}difs.csv',
                         mime='text/csv'
                     )
+                x_max = st.session_state["regs_" + str(Ta)][1]
+                x_min = st.session_state["regs_" + str(Ta)][0]
                 for i in [1, 0]:
                     #st.write(i, fill_type[i])
                     fig.add_trace(
@@ -368,17 +370,31 @@ def annealings():
                             x=big_data[int(Ta)][i][eje_x],
                             y=big_data[int(Ta)][i]["Heat Flow"],
                             #line_color=color_list[i],
-                            fill=fill_type[i],
-                            fillcolor=shade_color,
+                            # fill=fill_type[i],
+                            # fillcolor=shade_color,
                             mode="lines",
                             line = dict(color = color_list[i], width=width[i]),
                         )
                     )
+                    
                     #   Plot integration limits
                     fig.add_vline(
                         x=st.session_state["regs_" + str(Ta)][i],
                         line_dash="dash",
                         line_color="red",
+                    )
+                for i in [1,0]:
+                    integration_mask = (big_data[int(Ta)][i][eje_x] >= x_min) & (big_data[int(Ta)][i][eje_x] <= x_max)
+
+                    fig.add_trace(
+                        go.Scatter(
+                            x=big_data[int(Ta)][i][eje_x][integration_mask],
+                            y=big_data[int(Ta)][i]["Heat Flow"][integration_mask],
+                            fill=fill_type[i],
+                            fillcolor=shade_color,
+                            mode="lines",
+                            line=dict(color=color_list[i], width=width[i]),
+                        )
                     )
                 #   Plot difference
                 if show_dif:
@@ -609,14 +625,17 @@ def annealings():
                 fill_type = ["tonexty", None]
                 text = ["", i]
                 width = [2, 1.5]
+                x_max = st.session_state["regs_" + str(i)][1]
+                x_min = st.session_state["regs_" + str(i)][0]
+                
                 for j in [1, 0]:
                     fig.add_trace(
                         go.Scatter(
                             x = big_data[i][j][eje_x],
                             y=big_data[i][j]["Heat Flow"],
                             #line_color=color_list[j],
-                            fill=fill_type[j],
-                            fillcolor=shade_color,
+                            # fill=fill_type[j],
+                            # fillcolor=shade_color,
                             line = dict(color=color_list[j], width = width[j])
                         )
                     )
@@ -634,6 +653,18 @@ def annealings():
                         font=dict(
                             size=15, color="black"
                         ),  # Customize the appearance of the text
+                    )
+                for j in [1, 0]:
+                    integration_mask = (big_data[int(i)][j][eje_x] >= x_min) & (big_data[int(i)][j][eje_x] <= x_max)
+                    fig.add_trace(
+                        go.Scatter(
+                            x = big_data[i][j][eje_x][integration_mask],
+                            y=big_data[i][j]["Heat Flow"][integration_mask],
+                            #line_color=color_list[j],
+                            fill=fill_type[j],
+                            fillcolor=shade_color,
+                            line = dict(color=color_list[j], width = width[j])
+                        )
                     )
                 #   Plot the labels on each curve
                 fig.update_traces(textposition="middle right")
