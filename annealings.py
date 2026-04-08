@@ -14,32 +14,35 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-def bigdata_to_csv(data_dict):
+def bigdata_to_csv(data_dict, selected_cols):
     # List to hold all DataFrames after renaming
     renamed_dfs = []
 
     # Process each dictionary entry
     for key, (df1, df2) in data_dict.items():
         # Rename columns with dictionary key prefix to avoid conflicts
-        df1 = df1.add_prefix(f"{key}_")
-        df2 = df2.add_prefix(f"{key}_").add_suffix("_ref")
+        filter_df1 = df1[selected_cols]
+        filter_df2 = df2[selected_cols]
+        filter_df1 = filter_df1.add_prefix(f"{key}_")
+        filter_df2 = filter_df2.add_prefix(f"{key}_").add_suffix("_ref")
 
         # Store in list for final concatenation
-        renamed_dfs.append(df1)
-        renamed_dfs.append(df2)
+        renamed_dfs.append(filter_df1)
+        renamed_dfs.append(filter_df2)
 
     # Concatenate all DataFrames horizontally (axis=1)
     final_df = pd.concat(renamed_dfs, axis=1)
 
     new_order = []
-    group_size = 5
+    group_size = len(selected_cols)
     for i in range(0, len(final_df.columns), group_size):
-        group = final_df.columns[i:i+group_size]
-        # Expected order: [0, 1, 4, 3, 2]
-        reordered = [group[0], group[1], group[4], group[3], group[2]]
+        group = list(final_df.columns[i:i+group_size])
+        # st.write(group)
+        reordered = sorted(group, key=lambda col: 'Heat Flow' in col)
         new_order.extend(reordered)
-    final_df = final_df[new_order]
 
+    final_df = final_df[new_order]
+    final_df_copy = final_df
 
     # Convert final DataFrame to CSV format
     output = StringIO()
@@ -52,6 +55,18 @@ def bigdata_to_csv(data_dict):
 
 #  Set layout to wide screen
 #st.set_page_config(layout="wide")
+
+def common_substrings(strings):
+    if not strings:
+        return []
+    
+    shortest = min(strings, key=len)
+    substrings = {shortest[i:j] for i in range(len(shortest)) for j in range(i+1, len(shortest)+1)}
+    common = {s for s in substrings if all(s in string for string in strings)}
+    maximal = {s for s in common if not any(s in other for other in common if s != other)}
+    
+    return sorted(maximal, key=lambda s: strings[0].index(s))
+
 
 def annealings():
     #   Define text style for 'Enter folder name' text
@@ -168,9 +183,15 @@ def annealings():
         #   Scan file names for relevant info and load them as dictionary with tuples dataframes.
         #   The first dataframe (big_data[Ta][0])
         #   contains data for Ta measurement and the second element (big_data[Ta][1]) is the reference.
-        temps, big_data = ld.load_files(
+        temps, big_data, chip_name = ld.load_files(
             file_contents, file_names, [load_begin, load_fin], eje_x
         )
+        # common_substring = common_substrings(file_names)
+        # # st.write(common_substring)
+        # if common_substring != []:
+        #     chip_name = common_substring[0]
+        # else:
+        #     chip_name = 'Unknown_Chip'
         #   Initialize session state for each Ta to store the delta
         #for i in temps:
             # key_name = f'delta_{i}'
@@ -337,7 +358,7 @@ def annealings():
                     st.download_button(
                         label="Download dif",
                         data=csv_data,
-                        file_name='difs.csv',
+                        file_name=f'{chip_name}difs.csv',
                         mime='text/csv'
                     )
                 for i in [1, 0]:
@@ -565,10 +586,21 @@ def annealings():
                 * 1.01,]
 
             with ctr_panel:
+                # Define all possible column keys
+                column_keys = ['Index', 't', 'Tr', 'Ts', 'Heat Flow']
+
+                selected_columns = st.multiselect(
+                    "Select columns to keep:",
+                    options=column_keys,
+                    default=['Tr', 'Heat Flow']  # all selected by default
+                                    )
+                # Filter columns whose name contains any of the selected keys
+                data_csv_string = bigdata_to_csv(big_data, selected_cols=selected_columns)
+                
                 st.download_button(
                         label="Download CSV",
-                        data=bigdata_to_csv(big_data),
-                        file_name="data_output.csv",
+                        data=data_csv_string,
+                        file_name=f"{chip_name}data.csv",       #   Chip names in downloads
                         mime="text/csv"
                                     )
             #st.dataframe(big_data)
@@ -629,8 +661,12 @@ def annealings():
                     f"{row['temps']}\t{row['enthalpies']}"
                     for index, row in intsdf.iterrows()
                 )
+                ent_filename = f'{chip_name}enthalpies_normalized.csv' if mode == 'NORMALIZE' else f'{chip_name}enthalpies.csv'
                 with dwl_ent:
-                    st.download_button("download enthalpies", result_string)
+                    st.download_button(label= "download enthalpies",
+                                    data = result_string,
+                                    file_name=ent_filename,
+                                    mime="text/csv")
         #   Show main graph
         xaxis_range = [load_begin * 0.98, load_fin * 1.05]
         sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
@@ -657,6 +693,8 @@ def annealings():
     except IndexError:
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
+    except:
+        pass
     #except TypeError:
     #    with graf:
     #        st.markdown('<p class="big-font">Missing File:</p>', unsafe_allow_html=True)

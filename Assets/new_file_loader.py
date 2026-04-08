@@ -27,8 +27,8 @@ def load_files(file_contents, file_names, load_lims, eje_x):
 
         if file_0_content is not None and file_1_content is not None:
             
-            mod = fh.modify_text_file(file_0_content.decode('latin1'))
-            mod_ref = fh.modify_text_file(file_1_content.decode('latin1'))
+            mod, chip_name = fh.modify_text_file(file_0_content.decode('latin1'))
+            mod_ref, chip_name = fh.modify_text_file(file_1_content.decode('latin1'))
             df = pd.read_csv(StringIO(mod), sep=',', encoding='latin1', skipinitialspace=True)
             
             df = df.apply(pd.to_numeric, errors='coerce')
@@ -39,17 +39,17 @@ def load_files(file_contents, file_names, load_lims, eje_x):
             big_data[t] = (df,dfref)
         elif file_0_content is None:
             st.write(f'No annealed curve for temp {t}')
-            mod_ref = fh.modify_text_file(file_1_content.decode('latin1'))
+            mod_ref, chip_name = fh.modify_text_file(file_1_content.decode('latin1'))
             df = pd.read_csv(StringIO(mod_ref), sep=',', encoding='latin1', skipinitialspace=True)
             df = df.apply(pd.to_numeric, errors='coerce')
             df = df[(df[eje_x] >= load_lims[0]) & (df[eje_x] <= load_lims[1])]
             big_data[t] = (None, df)
         elif file_1_content is None:
             st.write('No File1')
-            mod = fh.modify_text_file(file_0_content.decode('latin1'))
+            mod, chip_name = fh.modify_text_file(file_0_content.decode('latin1'))
             df = pd.read_csv(StringIO(mod), sep=',', encoding='latin1', skipinitialspace=True)
             df = df.apply(pd.to_numeric, errors='coerce')
             df = df[(df[eje_x] >= load_lims[0]) & (df[eje_x] <= load_lims[1])]
             big_data[t] = (df, None)
 
-    return temps, big_data
+    return temps, big_data, chip_name

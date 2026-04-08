@@ -8,10 +8,12 @@ def modify_text_file(file_content):
     lines = file_content.splitlines()
     
     # Step 2: Remove the last couple of lines
-    lines = lines [:1] + lines
-
+    lines = lines [:1] + lines[2:]
+    chip_name = lines[-1].split()[1] + '_'
     if lines[-1][0].isalpha():
+        
         lines = lines[:-1]
+        
     
     # Step 3: Replace two or more spaces with a tab character
     modified_lines = [line.replace(',', '.') for line in lines]
@@ -21,7 +23,7 @@ def modify_text_file(file_content):
     modified_lines = [line.lstrip(',') for line in modified_lines]
     # Step 4: Write the modified lines back to the file
     processed_content = "\n".join(modified_lines)
-    return processed_content
+    return processed_content, chip_name
     
 
 
