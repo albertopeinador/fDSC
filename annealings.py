@@ -94,7 +94,7 @@ def annealings():
     #   Create the three main columns - one for main controls, one for the plots
     #       and one last one for the integrals plot and some adicional controls
 
-    ctr_panel, graf, inte = st.columns([3, 3, 4])
+    ctr_panel, graf, inte = st.columns([3, 4, 4])
 
     #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
     #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
@@ -110,11 +110,7 @@ def annealings():
             )
 
             eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
-            reverse_col, grid_col = st.columns([.7, .3])
-            with reverse_col:
-                reverse_temp = st.checkbox('Flip temperatures')
-            with grid_col:
-                toggle_grid = st.checkbox('Grid')
+
             load_start, load_end = st.columns(2)
             if eje_x == "t":
                 with load_start:
@@ -134,9 +130,7 @@ def annealings():
                     load_fin = st.number_input(
                         "End at " + eje_x, value=425.0, format="%.1f"
                     )
-            margin_step = (
-                st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
-            )
+
             int_dif_th = 0.0
             scalebar_scale = st.slider(
                 "scalebar scale", min_value=0.1, max_value=2.0, value=1.0, step=0.05
@@ -206,6 +200,45 @@ def annealings():
         #   Create MODIFY mode checkbox
         with ctr_panel:
             mode = st.radio("mode", ["FULL", "MODIFY", "NORMALIZE"], horizontal=True)
+        if mode == 'FULL':
+            with inte:
+                reverse_col, grid_col = st.columns([.7, .3])
+                with reverse_col:
+                    reverse_temp = st.checkbox('Flip temperatures')
+                with grid_col:
+                    toggle_grid = st.checkbox('Grid')
+                margin_step = (
+                    st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
+                                )
+        for i in temps:
+            if f"delta_{i}" in st.session_state:
+                #   Apply delta modification to all curves
+                big_data[i][0]["Heat Flow"] += (st.session_state[f"delta_{i}"] / 10) * big_data[i][0]["Heat Flow"].max()
+        # if mode != 'FULL':
+        #     for i in temps:
+            if "x_change_check" not in st.session_state:
+                st.session_state["x_change_check"] = "easteregg"
+            #   Initialize session_state with the auto-generated limits
+            regs_label = "regs_" + str(i)
+            if regs_label not in st.session_state or st.session_state["x_change_check"] != eje_x:
+                #   Find auto-limits for integration
+                
+                left, right = fai.find_int_region(
+                    big_data[i],
+                    int_dif_th
+                    * (big_data[i][0]["Heat Flow"] - big_data[i][1]["Heat Flow"]).max(),
+                    "Heat Flow",
+                )
+                
+                st.session_state["regs_" + str(i)] = [
+                    big_data[i][0][eje_x][left],
+                    big_data[i][0][eje_x][right],
+                ]
+                if i == temps[-1]:
+                    st.session_state["x_change_check"] = eje_x
+            #st.session_state[f"int_limits_{i}"] = st.session_state["regs_" + str(i)]
+            #st.session_state["regs_" + str(i)] = st.session_state[f"int_limits_{i}"]
+        
         if mode == "MODIFY":
             #   Create selectbox to select curve to modify
             #selected_keys = st.session_state.selected_key  # Retrieve the selected key
@@ -236,36 +269,7 @@ def annealings():
                 )
                 #st.write(st.session_state[f"delta_{Ta}"])
             #   INTEGRATION LOOP
-        for i in temps:
-            if f"delta_{i}" in st.session_state:
-                #   Apply delta modification to all curves
-                big_data[i][0]["Heat Flow"] += (st.session_state[f"delta_{i}"] / 10) * big_data[
-                    i
-                ][0]["Heat Flow"].max()
-        if mode != 'FULL':
-            for i in temps:
-                if "x_change_check" not in st.session_state:
-                    st.session_state["x_change_check"] = "easteregg"
-                #   Initialize session_state with the auto-generated limits
-                regs_label = "regs_" + str(i)
-                if (regs_label not in st.session_state or st.session_state["x_change_check"] != eje_x):
-                    #   Find auto-limits for integration
-                    
-                    left, right = fai.find_int_region(
-                        big_data[i],
-                        int_dif_th
-                        * (big_data[i][0]["Heat Flow"] - big_data[i][1]["Heat Flow"]).max(),
-                        "Heat Flow",
-                    )
-                    
-                    st.session_state["regs_" + str(i)] = [
-                        big_data[i][0][eje_x][left],
-                        big_data[i][0][eje_x][right],
-                    ]
-                    if i == temps[-1]:
-                        st.session_state["x_change_check"] = eje_x
-                #st.session_state[f"int_limits_{i}"] = st.session_state["regs_" + str(i)]
-                #st.session_state["regs_" + str(i)] = st.session_state[f"int_limits_{i}"]
+        
             if mode == 'MODIFY':
 
                 if f'new_lims_{Ta}' not in st.session_state:
@@ -724,8 +728,8 @@ def annealings():
     except IndexError:
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
-    except:
-        pass
+    except Exception as e:
+        st.write(e)
     #except TypeError:
     #    with graf:
     #        st.markdown('<p class="big-font">Missing File:</p>', unsafe_allow_html=True)
