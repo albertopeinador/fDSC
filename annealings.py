@@ -84,7 +84,7 @@ def annealings():
 
     # fig_dpi = 10
 
-    config = {"toImageButtonOptions": {"height": None, "width": None, "format": "svg"}}
+    # config = {"toImageButtonOptions": {"height": None, "width": None, "format": "svg"}}
 
 
     #   Define figures and axis for the plots
@@ -94,7 +94,7 @@ def annealings():
     #   Create the three main columns - one for main controls, one for the plots
     #       and one last one for the integrals plot and some adicional controls
 
-    ctr_panel, graf, inte = st.columns([3, 4, 4])
+    ctr_panel, graf, inte = st.columns([3, 3, 4.5])
 
     #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
     #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
@@ -139,21 +139,21 @@ def annealings():
             col, ref, shading = st.columns(3)
             with col:
                 main_color = st.color_picker(
-                    "Curve color",
+                    "Curve",
                     value="#2ca50b",
                     key="main_color",
                     # on_change=update_color,
                 )
             with ref:
                 ref_color = st.color_picker(
-                    "Reference color",
+                    "Reference",
                     value="#0886b9",
                     key="ref_color",
                     # on_change=update_ref,
                 )
             with shading:
                 shade_color = st.color_picker(
-                    "Shading color",
+                    "Shading",
                     value="#cccccc",
                     key="shade_color",
                     # on_change=update_shade,
@@ -409,6 +409,7 @@ def annealings():
                                 y=float(dif_scale) * dif
                                 + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
                                 mode="lines",
+                                line=dict(color='red', width=1.5),
                             )
                         )
                     else:
@@ -446,7 +447,25 @@ def annealings():
             intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies", "cols"])
             fig2 = px.scatter(intsdf, x="temps", y="enthalpies")
             fig2.update_traces(marker=dict(color=intsdf["cols"], size=10))
-            fig2.update_layout(showlegend=False)
+            fig2.update_layout(showlegend=False, autosize=False,margin=dict(l=5, r=5, t=5, b=5),height = 400, width = 500,
+                               xaxis_title='Temperature / ºC',
+                               yaxis_title='∆H / mJ',)
+            fig2.update_xaxes(
+                showline=True,
+                ticks='outside',
+                tickcolor='black',
+                mirror = 'all',
+                minor=dict(ticklen=2))
+            fig2.update_yaxes(
+                # tickformat=".1e",        # scientific notation
+                exponentformat="power",  # shows as 10^n instead of e notation
+                showexponent="all",       # or "first" for cleaner look
+                showgrid = False,
+                showline=True,
+                ticks='outside',
+                tickcolor='black',
+                mirror = 'all',
+                minor=dict(ticklen=2))
             # ax2.plot(temps[i], ints[i][1], "o", color = color)
             yaxis_range = [
                 min(min(big_data[Ta][0]["Heat Flow"]), min(big_data[Ta][1]["Heat Flow"]))
@@ -605,7 +624,7 @@ def annealings():
                 )
                 * 1.01,]
 
-            with ctr_panel:
+            with inte:
                 # Define all possible column keys
                 column_keys = ['Index', 't', 'Tr', 'Ts', 'Heat Flow']
 
@@ -627,7 +646,7 @@ def annealings():
             for i in temps:
                 color_list = [main_color, ref_color]
                 fill_type = ["tonexty", None]
-                text = ["", i]
+                text = ["", f'{i} ºC']
                 width = [2, 1.5]
                 x_max = st.session_state["regs_" + str(i)][1]
                 x_min = st.session_state["regs_" + str(i)][0]
@@ -645,7 +664,7 @@ def annealings():
                     )
                     fig.add_annotation(
                         x=big_data[i][j][eje_x].iloc[-1]
-                        * 1.05,  # x position of the last point
+                        * 1.2,  # x position of the last point
                         y=big_data[i][j]["Heat Flow"].iloc[
                             -1
                         ],  # y position of the last point
@@ -674,9 +693,11 @@ def annealings():
                 fig.update_traces(textposition="middle right")
                 fig.update_xaxes(
                                 showline=True,
+                                # mirror = 'all',
                                 ticks='outside',
                                 tickcolor='black',
                                 minor=dict(ticklen=2))
+                
                 if toggle_grid:
                     fig.update_xaxes(
                         showgrid=True,
@@ -687,10 +708,25 @@ def annealings():
                     )
 
         if mode != "FULL":
+            #   Plot the labels on each curve
+            fig.update_traces(textposition="middle right")
+            fig.update_xaxes(
+                            showline=True,
+                            ticks='outside',
+                            tickcolor='black',
+                            minor=dict(ticklen=2))
             with inte:
                 fig2.update_traces(marker=dict(color=intsdf["cols"], size=10))
                 fig2.update_layout(showlegend=False)
-                st.plotly_chart(fig2,  config={'responsive':True})
+                st.plotly_chart(fig2,  config={
+                    'responsive':True,
+                    'toImageButtonOptions': {
+                                        'format': 'png', # one of png, svg, jpeg, webp
+                                        'filename': f'{chip_name}_enthalpies',
+                                        'height': 500,
+                                        'width': 500,
+                                        'scale': 3 # Multiply title/legend/axis/canvas sizes by this factor
+                                    }})
                 _, dwl_ent, _ = st.columns([0.7, 1, 0.7])
                 result_string = "\n".join(
                     f"{row['temps']}\t{row['enthalpies']}"
@@ -705,26 +741,38 @@ def annealings():
         #   Show main graph
         xaxis_range = [load_begin * 0.98, load_fin * 1.05]
         sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
+        fig1_h = 580 if mode == 'FULL' else 580
         if eje_x != 't':
             fig.update_layout(
+                autosize=True,
                 showlegend=False,
-                height=700,
-                margin=dict(l=10, r=10, t=10, b=10),
+                height=fig1_h,
+                margin=dict(l=5, r=5, t=0, b=5),
                 xaxis=dict(visible=True),
-                yaxis=dict(visible=False),
+                yaxis=dict(visible=False, showline=True, mirror ='all'),
                 xaxis_title='Temperature / ºC',
             )
         else:
                     fig.update_layout(
+                autosize=False,
                 showlegend=False,
-                height=700,
-                margin=dict(l=10, r=10, t=10, b=10),
+                height=fig1_h,
+                margin=dict(l=5, r=5, t=5, b=5),
                 xaxis=dict(visible=True),
                 yaxis=dict(visible=False),
                 xaxis_title='Time / s',
             )
         with graf:
-            st.plotly_chart(fig, config={'responsive':True})#width = 'container', **{"config": config})
+            figname = f'{chip_name}full_data' if mode =='FULL' else f'{chip_name}{Ta}_data'
+            st.plotly_chart(fig, config={
+                'responsive':True,
+                'toImageButtonOptions': {
+                    'format': 'png', # one of png, svg, jpeg, webp
+                    'filename': figname,
+                    'height': 750,
+                    'width': 250,
+                    'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
+                }})#width = 'container', **{"config": config})
     except IndexError:
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)

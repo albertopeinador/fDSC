@@ -18,6 +18,40 @@ def svg_to_base64(path: str) -> str:
 
 st.set_page_config(layout="wide")
 
+st.markdown("""
+<style>
+/* Remove spacing around custom components */
+div[data-testid="stElementContainer"] {
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+    padding: 0px !important;
+}
+
+/* Target the specific iframe container */
+iframe.stCustomComponentV1 {
+    margin: -10000px !important;
+    padding: 1em !important;
+    display: block;
+}
+
+/* Optional: remove extra gap from emotion wrapper */
+/*div[class^="st-emotion-cache"] {
+    margin: 0px !important;
+    padding: 0px !important;
+}*/
+</style>
+""", unsafe_allow_html=True)
+
+# st.markdown("""
+# <style>
+# div[data-testid="stElementContainer"]:has(iframe[title="streamlit_js_eval.streamlit_js_eval"]) {
+#     margin: 0 !important;
+#     padding: 0 !important;
+# }
+# </style>
+# """, unsafe_allow_html=True)
+
+
 # --- Tab functions ---
 def full_kin():
     with st.expander('Load Data', expanded=True):
@@ -53,7 +87,7 @@ tabs = {
 st.markdown("""
     <style>
         [data-testid="stSidebar"] {
-            width: 3.5rem !important;   /* very narrow */
+            width: 4.2rem !important;   /* very narrow */
             min-width: 3.5rem !important;
         }
         .sidebar-icons {
@@ -61,7 +95,7 @@ st.markdown("""
             flex-direction: column;
             justify-content: space-evenly;
             align-items: center;
-            height: 100%;
+            height: 200%;
         }
         .sidebar-icons img {
             width: 2.9rem;
@@ -72,7 +106,7 @@ st.markdown("""
             transition: transform 0.2s ease;
         }
         .sidebar-icons img:hover {
-            transform: scale(1.1);
+            transform: scale(1.2);
         }
     </style>
 """, unsafe_allow_html=True)
