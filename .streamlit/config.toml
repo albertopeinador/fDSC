@@ -3,3 +3,7 @@ disableWidgetStateDuplicationWarning = true
 
 [ui]
 hideTopBar = true
+
+[theme]
+primaryColor = "#e43b51"
+backgroundColor = "white"

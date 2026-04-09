@@ -134,7 +134,7 @@ choice = st.sidebar.empty()
 icon_html = '<div class="sidebar-icons">'
 for tab in icons.keys():
     url = f"?nav={tab}"  # store selection in query params
-    icon_path = icons[tab] if not theme else icons[tab][:-4] + '_dark' + '.svg'
+    icon_path = icons[tab] #if not theme else icons[tab][:-4] + '_dark' + '.svg'
     icon_b64 = svg_to_base64(icon_path)
     icon_html += f'<a href="{url}"><img src="{icon_b64}" title="{tab}"></a>'
 icon_html += "</div>"

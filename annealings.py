@@ -234,9 +234,6 @@ def annealings():
                     st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
                                 )
         for i in temps:
-            if f"delta_{i}" in st.session_state:
-                #   Apply delta modification to all curves
-                big_data[i][0]["Heat Flow"] += (st.session_state[f"delta_{i}"] / 10) * big_data[i][0]["Heat Flow"].max()
         # if mode != 'FULL':
         #     for i in temps:
             if "x_change_check" not in st.session_state:
@@ -263,10 +260,11 @@ def annealings():
             #st.session_state["regs_" + str(i)] = st.session_state[f"int_limits_{i}"]
         
         if mode == "MODIFY":
+
             #   Create selectbox to select curve to modify
             #selected_keys = st.session_state.selected_key  # Retrieve the selected key
             with ctr_panel:
-                Ta = selected_key = st.selectbox(
+                Ta = st.selectbox(
                     "Select Ta to modify", [i for i in temps], key="selected_key"
                 )
             for i in temps:
@@ -292,25 +290,29 @@ def annealings():
                 )
                 #st.write(st.session_state[f"delta_{Ta}"])
             #   INTEGRATION LOOP
-        
-            if mode == 'MODIFY':
 
-                if f'new_lims_{Ta}' not in st.session_state:
-                    st.session_state[f'new_lims_{Ta}'] = st.session_state["regs_" + str(Ta)]
-                st.session_state["regs_" + str(Ta)] = st.session_state[f'new_lims_{Ta}']
-                with ctr_panel:
-                    slider_limits = st.slider(
-                        "Integration limits",
-                        min_value=big_data[int(Ta)][0][eje_x].min(),
-                        max_value=big_data[int(Ta)][0][eje_x].max(),
-                        value=st.session_state["regs_" + str(Ta)],
-                        key=f'new_lims_{Ta}',
-                        step=(
-                            big_data[int(Ta)][0][eje_x].max()
-                            - big_data[int(Ta)][0][eje_x].min()
-                        )
-                        / 500,
-                    )            
+        for i in temps:
+            if f"delta_{i}" in st.session_state:
+                #   Apply delta modification to all curves
+                big_data[i][0]["Heat Flow"] += (st.session_state[f"delta_{i}"] / 10) * big_data[i][0]["Heat Flow"].max()
+        if mode=='MODIFY':
+
+            if f'new_lims_{Ta}' not in st.session_state:
+                st.session_state[f'new_lims_{Ta}'] = st.session_state["regs_" + str(Ta)]
+            st.session_state["regs_" + str(Ta)] = st.session_state[f'new_lims_{Ta}']
+            with ctr_panel:
+                slider_limits = st.slider(
+                    "Integration limits",
+                    min_value=big_data[int(Ta)][0][eje_x].min(),
+                    max_value=big_data[int(Ta)][0][eje_x].max(),
+                    value=st.session_state["regs_" + str(Ta)],
+                    key=f'new_lims_{Ta}',
+                    step=(
+                        big_data[int(Ta)][0][eje_x].max()
+                        - big_data[int(Ta)][0][eje_x].min()
+                    )
+                    / 500,
+                )            
             with ctr_panel:
                 #   Check if you want to show difference plot
                 show_dif = st.checkbox("Show dif")
@@ -348,6 +350,10 @@ def annealings():
                 #   Divide into three columns: one for each color to define
                 col, ref, shading = st.columns(3)
                 #   Create color pickers in each column for each color
+        
+            
+        
+        
             dif_df = pd.DataFrame()
             for i in temps:
                         #   Find indices of integration limit in the DataFrame
@@ -374,86 +380,91 @@ def annealings():
                 #x_clean = x[~y.isna()]
                 ints.append([i, np.trapezoid(y_dif_integrated, x)])
                 intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
+        
+            
             color_list = [main_color, ref_color]
             fill_type = ["tonexty", None]
             width = [2, 1.5]
-            if mode == 'MODIFY':
-                csv_buffer = StringIO()
-                dif_df.to_csv(csv_buffer, index=False)
-                csv_data = csv_buffer.getvalue()
-                with ctr_panel:
-                    st.download_button(
-                        label="Download dif",
-                        data=csv_data,
-                        file_name=f'{chip_name}difs.csv',
-                        mime='text/csv'
+        
+        
+            csv_buffer = StringIO()
+            dif_df.to_csv(csv_buffer, index=False)
+            csv_data = csv_buffer.getvalue()
+            with ctr_panel:
+                st.download_button(
+                    label="Download dif",
+                    data=csv_data,
+                    file_name=f'{chip_name}difs.csv',
+                    mime='text/csv'
+                )
+            x_max = st.session_state["regs_" + str(Ta)][1]
+            x_min = st.session_state["regs_" + str(Ta)][0]
+            for i in [1, 0]:
+                #st.write(i, fill_type[i])
+                fig.add_trace(
+                    go.Scatter(
+                        x=big_data[int(Ta)][i][eje_x],
+                        y=big_data[int(Ta)][i]["Heat Flow"],
+                        #line_color=color_list[i],
+                        # fill=fill_type[i],
+                        # fillcolor=shade_color,
+                        mode="lines",
+                        line = dict(color = color_list[i], width=width[i]),
                     )
-                x_max = st.session_state["regs_" + str(Ta)][1]
-                x_min = st.session_state["regs_" + str(Ta)][0]
-                for i in [1, 0]:
-                    #st.write(i, fill_type[i])
-                    fig.add_trace(
-                        go.Scatter(
-                            x=big_data[int(Ta)][i][eje_x],
-                            y=big_data[int(Ta)][i]["Heat Flow"],
-                            #line_color=color_list[i],
-                            # fill=fill_type[i],
-                            # fillcolor=shade_color,
-                            mode="lines",
-                            line = dict(color = color_list[i], width=width[i]),
-                        )
-                    )
-                    
-                    #   Plot integration limits
-                    fig.add_vline(
-                        x=st.session_state["regs_" + str(Ta)][i],
-                        line_dash="dash",
-                        line_color="red",
-                    )
-                for i in [1,0]:
-                    integration_mask = (big_data[int(Ta)][i][eje_x] >= x_min) & (big_data[int(Ta)][i][eje_x] <= x_max)
+                )
+                
+                #   Plot integration limits
+                fig.add_vline(
+                    x=st.session_state["regs_" + str(Ta)][i],
+                    line_dash="dash",
+                    line_color="red",
+                )
+            for i in [1,0]:
+                integration_mask = (big_data[int(Ta)][i][eje_x] >= x_min) & (big_data[int(Ta)][i][eje_x] <= x_max)
 
+                fig.add_trace(
+                    go.Scatter(
+                        x=big_data[int(Ta)][i][eje_x][integration_mask],
+                        y=big_data[int(Ta)][i]["Heat Flow"][integration_mask],
+                        fill=fill_type[i],
+                        fillcolor=shade_color,
+                        mode="lines",
+                        line=dict(color=color_list[i], width=width[i]),
+                    )
+                )
+            #   Plot difference
+            if show_dif:
+                if len(big_data[int(Ta)][0][eje_x]) == len(dif):
                     fig.add_trace(
                         go.Scatter(
-                            x=big_data[int(Ta)][i][eje_x][integration_mask],
-                            y=big_data[int(Ta)][i]["Heat Flow"][integration_mask],
-                            fill=fill_type[i],
-                            fillcolor=shade_color,
+                            x=big_data[int(Ta)][0][eje_x],
+                            y=float(dif_scale) * dif
+                            + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
                             mode="lines",
-                            line=dict(color=color_list[i], width=width[i]),
+                            line=dict(color='red', width=1.5),
                         )
                     )
-                #   Plot difference
-                if show_dif:
-                    if len(big_data[int(Ta)][0][eje_x]) == len(dif):
-                        fig.add_trace(
-                            go.Scatter(
-                                x=big_data[int(Ta)][0][eje_x],
-                                y=float(dif_scale) * dif
-                                + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
-                                mode="lines",
-                                line=dict(color='red', width=1.5),
-                            )
+                else:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=big_data[int(Ta)][1][eje_x],
+                            y=float(dif_scale) * dif
+                            + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
+                            mode="lines",
                         )
-                    else:
-                        fig.add_trace(
-                            go.Scatter(
-                                x=big_data[int(Ta)][1][eje_x],
-                                y=float(dif_scale) * dif
-                                + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
-                                mode="lines",
-                            )
-                        )
-            #except ValueError:
-            #    st.write(
-            #        i,
-            #        "Error with int limits",
-            #        big_data[i][0]["Heat Flow"][indices.min() : indices.max()]
-            #        - big_data[i][1]["Heat Flow"][indices.min() : indices.max()],
-            #    )
-            #except TypeError:
-            #    with ctr_panel:
-            #        st.write(i, "Modify integral limits")
+                    )
+        #except ValueError:
+        #    st.write(
+        #        i,
+        #        "Error with int limits",
+        #        big_data[i][0]["Heat Flow"][indices.min() : indices.max()]
+        #        - big_data[i][1]["Heat Flow"][indices.min() : indices.max()],
+        #    )
+        #except TypeError:
+        #    with ctr_panel:
+        #        st.write(i, "Modify integral limits")
+
+        
         if mode == "MODIFY":
             lower_y = (
                 min(ints, key=lambda x: x[1])[1] - 0.5 * max(ints, key=lambda x: x[1])[1]
@@ -597,6 +608,7 @@ def annealings():
                 float(big_data[temps[0]][1]["Heat Flow"].max())
                 - float(big_data[temps[0]][1]["Heat Flow"].min())
             )
+            all_margins = []
             #   move down relative to the previous curve, so the loop starts with the second curve and moves
             for i in range(1, len(big_data)):
                 #   Calculate the difference between consecutive Ta curves - the minimum separation required
@@ -616,14 +628,18 @@ def annealings():
                     big_data[temps[i]][1]["Heat Flow"]
                     - big_data[temps[i - 1]][0]["Heat Flow"]
                 ).max(),)
+                all_margins.append(dif)
+            dif = max(all_margins)
+            for i in range(1, len(big_data)):
                 if not reverse_temp:
                     #   Move both main and reference curves down by
-                    big_data[temps[i]][0]["Heat Flow"] -= dif + margin
-                    big_data[temps[i]][1]["Heat Flow"] -= dif + margin
+                    big_data[temps[i]][0]["Heat Flow"] -= (dif + margin)*i
+                    big_data[temps[i]][1]["Heat Flow"] -= (dif + margin)*i
                 else:
                     #   Shift curve up
                     big_data[temps[i]][0]["Heat Flow"] += dif + margin
                     big_data[temps[i]][1]["Heat Flow"] += dif + margin
+            
             yaxis_range = [
                 min(
                     min(big_data[temps[-1]][0]["Heat Flow"]),
@@ -687,7 +703,7 @@ def annealings():
                     )
                     fig.add_annotation(
                         x=big_data[i][j][eje_x].iloc[-1]
-                        * 1.2,  # x position of the last point
+                        * 1.1,  # x position of the last point
                         y=big_data[i][j]["Heat Flow"].iloc[
                             -1
                         ],  # y position of the last point
@@ -788,12 +804,12 @@ def annealings():
         with graf:
             figname = f'{chip_name}full_data' if mode =='FULL' else f'{chip_name}{Ta}_data'
             st.plotly_chart(fig, config={
-                'responsive':True,
+                'responsive':False,
                 'toImageButtonOptions': {
                     'format': 'png', # one of png, svg, jpeg, webp
                     'filename': figname,
                     'height': 750,
-                    'width': 250,
+                    'width': 450,
                     'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
                 }})#width = 'container', **{"config": config})
     except IndexError:
