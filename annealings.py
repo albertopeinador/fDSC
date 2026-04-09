@@ -729,7 +729,8 @@ def annealings():
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
     except Exception as e:
-        st.write(e)
+        pass
+        # st.write(e)
     #except TypeError:
     #    with graf:
     #        st.markdown('<p class="big-font">Missing File:</p>', unsafe_allow_html=True)
