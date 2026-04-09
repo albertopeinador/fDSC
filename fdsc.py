@@ -18,29 +18,29 @@ def svg_to_base64(path: str) -> str:
 
 st.set_page_config(layout="wide")
 
-st.markdown("""
-<style>
-/* Remove spacing around custom components */
-div[data-testid="stElementContainer"] {
-    margin-top: 0px !important;
-    margin-bottom: 0px !important;
-    padding: 0px !important;
-}
+# st.markdown("""
+# <style>
+# /* Remove spacing around custom components */
+# div[data-testid="stElementContainer"] {
+#     margin-top: 0px !important;
+#     margin-bottom: 0px !important;
+#     padding: 0px !important;
+# }
 
-/* Target the specific iframe container */
-iframe.stCustomComponentV1 {
-    margin: -10000px !important;
-    padding: 1em !important;
-    display: block;
-}
+# /* Target the specific iframe container */
+# iframe.stCustomComponentV1 {
+#     margin: -10000px !important;
+#     padding: 1em !important;
+#     display: block;
+# }
 
-/* Optional: remove extra gap from emotion wrapper */
-/*div[class^="st-emotion-cache"] {
-    margin: 0px !important;
-    padding: 0px !important;
-}*/
-</style>
-""", unsafe_allow_html=True)
+# /* Optional: remove extra gap from emotion wrapper */
+# /*div[class^="st-emotion-cache"] {
+#     margin: 0px !important;
+#     padding: 0px !important;
+# }*/
+# </style>
+# """, unsafe_allow_html=True)
 
 # st.markdown("""
 # <style>
@@ -88,7 +88,7 @@ st.markdown("""
     <style>
         [data-testid="stSidebar"] {
             width: 4.2rem !important;   /* very narrow */
-            min-width: 3.5rem !important;
+            min-width: 0rem !important;
         }
         .sidebar-icons {
             display: flex;

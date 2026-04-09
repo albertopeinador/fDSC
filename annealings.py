@@ -14,6 +14,9 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+
+
+
 def bigdata_to_csv(data_dict, selected_cols):
     # List to hold all DataFrames after renaming
     renamed_dfs = []
@@ -69,19 +72,39 @@ def common_substrings(strings):
 
 
 def annealings():
+    # st.markdown("""
+    # <style>
+    # /* Kill the entire container if it contains that iframe */
+    # div[data-testid="stElementContainer"]:has(iframe[title="streamlit_js_eval.streamlit_js_eval"]) {
+    #     display: none !important;
+    # }
+    # </style>
+    # """, unsafe_allow_html=True)
     #   Define text style for 'Enter folder name' text
-    st.markdown(
-        """
-    <style>
-    .big-font {
-        font-size:30px !important;
-        text-align:center !important;
-    }
-    </style>
-    """,
-        unsafe_allow_html=True,
-    )
+    # st.markdown(
+    #     """
+    # <style>
+    # .big-font {
+    #     font-size:30px !important;
+    #     text-align:center !important;
+    # }
+    # </style>
+    # """,
+    #     unsafe_allow_html=True,
+    # )
+    # st.markdown("""
+    # <style>
+    # /* Hide the streamlit_js_eval iframe (the tiny 8px one) */
+    # iframe[title="streamlit_js_eval.streamlit_js_eval"] {
+    #     display: none !important;
+    # }
 
+    # /* If there are empty vertical blocks padding the top, collapse them */
+    # section.main > div:first-child {
+    #     padding-top: 0 !important;
+    # }
+    # </style>
+    # """, unsafe_allow_html=True)
     # fig_dpi = 10
 
     # config = {"toImageButtonOptions": {"height": None, "width": None, "format": "svg"}}
