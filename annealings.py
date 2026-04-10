@@ -1,4 +1,6 @@
 import streamlit as st
+import matplotlib as mpl
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import Assets.new_file_loader as ld
 import Assets.find_and_int as fai
@@ -12,15 +14,19 @@ from matplotlib.colors import rgb2hex
 from io import StringIO
 import warnings
 
+
+
 warnings.filterwarnings("ignore")
 
 
-
+def hex_to_rgba(hex_color, alpha=0.3):
+    r, g, b = mcolors.to_rgb(hex_color)
+    return f"rgba({int(r*255)}, {int(g*255)}, {int(b*255)}, {alpha})"
 
 def bigdata_to_csv(data_dict, selected_cols):
     # List to hold all DataFrames after renaming
     renamed_dfs = []
-
+    group_size = len(selected_cols)
     # Process each dictionary entry
     for key, (df1, df2) in data_dict.items():
         # Rename columns with dictionary key prefix to avoid conflicts
@@ -28,7 +34,14 @@ def bigdata_to_csv(data_dict, selected_cols):
         filter_df2 = df2[selected_cols]
         filter_df1 = filter_df1.add_prefix(f"{key}_")
         filter_df2 = filter_df2.add_prefix(f"{key}_").add_suffix("_ref")
-
+        pad_row = [None] * group_size
+        int_limits_row = [None] * group_size
+        int_limits_row[0] = st.session_state[f'regs_{key}'][0]
+        int_limits_row[1] = st.session_state[f'regs_{key}'][1]
+        padded_df1 = pd.DataFrame([pad_row, int_limits_row, pad_row], columns = filter_df1.columns)
+        padded_df2 = pd.DataFrame([pad_row, pad_row, pad_row], columns = filter_df2.columns)
+        filter_df1 = pd.concat([padded_df1, filter_df1], ignore_index=True, axis=0)
+        filter_df2 = pd.concat([padded_df2, filter_df2], ignore_index=True, axis=0)
         # Store in list for final concatenation
         renamed_dfs.append(filter_df1)
         renamed_dfs.append(filter_df2)
@@ -37,7 +50,7 @@ def bigdata_to_csv(data_dict, selected_cols):
     final_df = pd.concat(renamed_dfs, axis=1)
 
     new_order = []
-    group_size = len(selected_cols)
+    
     for i in range(0, len(final_df.columns), group_size):
         group = list(final_df.columns[i:i+group_size])
         # st.write(group)
@@ -159,28 +172,45 @@ def annealings():
                 "scalebar scale", min_value=0.1, max_value=2.0, value=1.0, step=0.05
             )
         with st.expander("Colors", expanded=False):
-            col, ref, shading = st.columns(3)
-            with col:
-                main_color = st.color_picker(
-                    "Curve",
-                    value="#2ca50b",
-                    key="main_color",
-                    # on_change=update_color,
-                )
+            ref, main1, main2, main3 = st.columns(4)
+            # with col:
+            #     main_color = st.color_picker(
+            #         "Curve",
+            #         value="#2ca50b",
+            #         key="main_color",
+            #         # on_change=update_color,
+            #     )
             with ref:
                 ref_color = st.color_picker(
-                    "Reference",
-                    value="#0886b9",
+                    "Ref",
+                    value="#4B4B4B",
                     key="ref_color",
                     # on_change=update_ref,
                 )
-            with shading:
+            with main1:
                 shade_color = st.color_picker(
-                    "Shading",
-                    value="#cccccc",
+                    "Start",
+                    value="#5a93e4",
                     key="shade_color",
                     # on_change=update_shade,
                 )
+            with main2:
+                shade_color2 = st.color_picker(
+                    "Mid",
+                    value="#6c6c6c",
+                    key="shade_color_2",
+                    # on_change=update_shade,
+                )
+
+            with main3:
+                shade_color3 = st.color_picker(
+                    "End",
+                    value="#e06161",
+                    key="shade_color_3",
+                    # on_change=update_shade,
+                )
+
+    
     if eje_x == "t":
         norm_lims_default = [0.21, 0.245]
     else:
@@ -221,6 +251,18 @@ def annealings():
         #   Initialize list to store integral results
         ints = []
         #   Create MODIFY mode checkbox
+        cmap = mpl.colors.LinearSegmentedColormap.from_list(
+            'unevently divided', [(0, shade_color), (.5, shade_color2), (1, shade_color3)])
+        
+        cmap_min = min(temps)
+        cmap_max = max(temps)
+        norm = mcolors.Normalize(vmin=cmap_min, vmax=cmap_max)
+        color_dict = {}
+        for v in temps:
+            color = cmap(norm(v))  # normalize → map to color
+    
+            color = mcolors.to_hex(color)
+            color_dict[v] = color
         with ctr_panel:
             mode = st.radio("mode", ["FULL", "MODIFY", "NORMALIZE"], horizontal=True)
         if mode == 'FULL':
@@ -382,7 +424,7 @@ def annealings():
                 intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
         
             
-            color_list = [main_color, ref_color]
+            # color_list = [main_color, ref_color]
             fill_type = ["tonexty", None]
             width = [2, 1.5]
         
@@ -400,6 +442,7 @@ def annealings():
             x_max = st.session_state["regs_" + str(Ta)][1]
             x_min = st.session_state["regs_" + str(Ta)][0]
             for i in [1, 0]:
+                line_c = color_dict[Ta] if i==0 else ref_color
                 #st.write(i, fill_type[i])
                 fig.add_trace(
                     go.Scatter(
@@ -409,7 +452,7 @@ def annealings():
                         # fill=fill_type[i],
                         # fillcolor=shade_color,
                         mode="lines",
-                        line = dict(color = color_list[i], width=width[i]),
+                        line = dict(color = line_c, width=width[i]),
                     )
                 )
                 
@@ -421,15 +464,15 @@ def annealings():
                 )
             for i in [1,0]:
                 integration_mask = (big_data[int(Ta)][i][eje_x] >= x_min) & (big_data[int(Ta)][i][eje_x] <= x_max)
-
+                line_c= color_dict[Ta] if i==0 else ref_color
                 fig.add_trace(
                     go.Scatter(
                         x=big_data[int(Ta)][i][eje_x][integration_mask],
                         y=big_data[int(Ta)][i]["Heat Flow"][integration_mask],
                         fill=fill_type[i],
-                        fillcolor=shade_color,
+                        fillcolor=hex_to_rgba(line_c),
                         mode="lines",
-                        line=dict(color=color_list[i], width=width[i]),
+                        line=dict(color=line_c, width=width[i]),
                     )
                 )
             #   Plot difference
@@ -472,15 +515,15 @@ def annealings():
             upper_y = (
                 max(ints, key=lambda x: x[1])[1] + 0.5 * max(ints, key=lambda x: x[1])[1]
             )
-            cmap = plt.get_cmap("Blues")
-            colors = np.linspace(0.3, 1, len(temps))
+            # cmap = plt.get_cmap("Blues")
+            # colors = np.linspace(0.3, 1, len(temps))
             # color = []
-            for i in range(len(temps)):
-                color = cmap(colors[i])
-                ints[i].append(str(rgb2hex(color)))
-            intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies", "cols"])
+            # for i in range(len(temps)):
+            #     color = cmap(colors[i])
+            #     ints[i].append(str(rgb2hex(color)))
+            intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])#, "cols"])
             fig2 = px.scatter(intsdf, x="temps", y="enthalpies")
-            fig2.update_traces(marker=dict(color=intsdf["cols"], size=10))
+            fig2.update_traces(marker=dict(color=list(color_dict.values()), size=10))
             fig2.update_layout(showlegend=False, autosize=False,margin=dict(l=5, r=5, t=5, b=5),height = 400, width = 500,
                                xaxis_title='Temperature / ºC',
                                yaxis_title='∆H / mJ',)
@@ -637,8 +680,8 @@ def annealings():
                     big_data[temps[i]][1]["Heat Flow"] -= (dif + margin)*i
                 else:
                     #   Shift curve up
-                    big_data[temps[i]][0]["Heat Flow"] += dif + margin
-                    big_data[temps[i]][1]["Heat Flow"] += dif + margin
+                    big_data[temps[i]][0]["Heat Flow"] += (dif + margin)*i
+                    big_data[temps[i]][1]["Heat Flow"] += (dif + margin)*i
             
             yaxis_range = [
                 min(
@@ -672,6 +715,9 @@ def annealings():
                     options=column_keys,
                     default=['Tr', 'Heat Flow']  # all selected by default
                                     )
+                if len(selected_columns)<2:
+                    st.warning('SELECT AT LEAST 2 COLUMNS')
+                    selected_columns = column_keys
                 # Filter columns whose name contains any of the selected keys
                 data_csv_string = bigdata_to_csv(big_data, selected_cols=selected_columns)
                 
@@ -683,7 +729,7 @@ def annealings():
                                     )
             #st.dataframe(big_data)
             for i in temps:
-                color_list = [main_color, ref_color]
+                # color_list = [main_color, ref_color]
                 fill_type = ["tonexty", None]
                 text = ["", f'{i} ºC']
                 width = [2, 1.5]
@@ -691,6 +737,7 @@ def annealings():
                 x_min = st.session_state["regs_" + str(i)][0]
                 
                 for j in [1, 0]:
+                    line_c = color_dict[i] if j==0 else ref_color
                     fig.add_trace(
                         go.Scatter(
                             x = big_data[i][j][eje_x],
@@ -698,7 +745,7 @@ def annealings():
                             #line_color=color_list[j],
                             # fill=fill_type[j],
                             # fillcolor=shade_color,
-                            line = dict(color=color_list[j], width = width[j])
+                            line = dict(color=line_c, width = width[j])
                         )
                     )
                     fig.add_annotation(
@@ -713,10 +760,11 @@ def annealings():
                         ax=20,
                         ay=-20,  # Adjust the position of the annotation
                         font=dict(
-                            size=15, color="black"
+                            size=15, color=line_c
                         ),  # Customize the appearance of the text
                     )
                 for j in [1, 0]:
+                    line_c = color_dict[i] if j==0 else ref_color
                     integration_mask = (big_data[int(i)][j][eje_x] >= x_min) & (big_data[int(i)][j][eje_x] <= x_max)
                     fig.add_trace(
                         go.Scatter(
@@ -724,8 +772,8 @@ def annealings():
                             y=big_data[i][j]["Heat Flow"][integration_mask],
                             #line_color=color_list[j],
                             fill=fill_type[j],
-                            fillcolor=shade_color,
-                            line = dict(color=color_list[j], width = width[j])
+                            fillcolor=hex_to_rgba(line_c),
+                            line = dict(color=line_c, width = width[j])
                         )
                     )
                 #   Plot the labels on each curve
@@ -755,7 +803,7 @@ def annealings():
                             tickcolor='black',
                             minor=dict(ticklen=2))
             with inte:
-                fig2.update_traces(marker=dict(color=intsdf["cols"], size=10))
+                fig2.update_traces(marker=dict(color=list(color_dict.values()), size=10))
                 fig2.update_layout(showlegend=False)
                 st.plotly_chart(fig2,  config={
                     'responsive':True,

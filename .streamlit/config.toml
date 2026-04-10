@@ -5,5 +5,5 @@ disableWidgetStateDuplicationWarning = true
 hideTopBar = true
 
 [theme]
-primaryColor = "#e43b51"
+primaryColor = "#2CA50B"
 backgroundColor = "white"
