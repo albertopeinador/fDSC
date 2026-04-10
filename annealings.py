@@ -13,10 +13,24 @@ import plotly.express as px
 from matplotlib.colors import rgb2hex
 from io import StringIO
 import warnings
+import json
 
 
 
 warnings.filterwarnings("ignore")
+
+def serialize_state(state):
+    exclude_keys = ['selected_key', 'loaded_save', 'state_file', 'up_files']
+    serializable = {}
+    for k, v in state.items():
+        if k in exclude_keys:
+            continue
+        try:
+            json.dumps(v)  # test serializability
+            serializable[k] = v
+        except TypeError:
+            pass  # skip non-serializable objects
+    return serializable
 
 
 def hex_to_rgba(hex_color, alpha=0.3):
@@ -125,6 +139,7 @@ def annealings():
 
     #   Define figures and axis for the plots
 
+
     fig = go.Figure()
 
     #   Create the three main columns - one for main controls, one for the plots
@@ -137,13 +152,49 @@ def annealings():
     #       rest are self-explanatory
 
     with ctr_panel:
-        with st.expander("Load controls", expanded=True):
-            files = st.file_uploader(
-                "Upload files",
-                accept_multiple_files=True,
-                type=["txt"],
-                label_visibility="collapsed",
-            )
+        with st.expander("Save States", expanded=True):
+            
+            state_json = json.dumps(serialize_state(st.session_state), indent=2)
+            if 'chip_name' in st.session_state:
+                save_name = st.session_state['chip_name'] + 'save_state.json'
+            else:
+                save_name = 'unknown_save_state.json'
+            _, save, _ = st.columns([1,3,1])
+            files, load = st.columns(2)
+            with save:
+                st.download_button(
+                    "💾 Save state",
+                    state_json,
+                    file_name=save_name,
+                    mime="application/json"
+                        )
+            with files:
+                files = st.file_uploader(
+                    "Upload files",
+                    accept_multiple_files=True,
+                    type=["txt"],
+                    key='up_files'
+                    # label_visibility="collapsed",
+                        )
+
+            with load:
+
+                uploaded_save_state = st.file_uploader("Load state", type="json", key='state_file')
+
+            if uploaded_save_state and 'loaded_save' not in st.session_state:
+                loaded_state = json.load(uploaded_save_state)
+
+                for k, v in loaded_state.items():
+                    st.session_state[k] = v
+                # Clear the uploaded file
+                del st.session_state["state_file"]
+                with load:
+                    st.success("State restored")
+                st.session_state['loaded_save'] = True
+                # st.rerun()
+        
+
+
 
             eje_x = st.selectbox("x axis", ["Tr", "Ts", "t"])
 
@@ -233,6 +284,11 @@ def annealings():
         temps, big_data, chip_name = ld.load_files(
             file_contents, file_names, [load_begin, load_fin], eje_x
         )
+        if 'chip_name' in st.session_state:
+            if st.session_state['chip_name'] != chip_name:
+                with load:
+                    st.warning('Different chip data loaded')
+        st.session_state['chip_name'] = chip_name
         # common_substring = common_substrings(file_names)
         # # st.write(common_substring)
         # if common_substring != []:
@@ -868,6 +924,7 @@ def annealings():
         pass
     except Exception as e:
         st.write(e)
+
     #except TypeError:
     #    with graf:
     #        st.markdown('<p class="big-font">Missing File:</p>', unsafe_allow_html=True)
