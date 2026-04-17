@@ -99,42 +99,7 @@ def common_substrings(strings):
 
 
 def annealings():
-    # st.markdown("""
-    # <style>
-    # /* Kill the entire container if it contains that iframe */
-    # div[data-testid="stElementContainer"]:has(iframe[title="streamlit_js_eval.streamlit_js_eval"]) {
-    #     display: none !important;
-    # }
-    # </style>
-    # """, unsafe_allow_html=True)
-    #   Define text style for 'Enter folder name' text
-    # st.markdown(
-    #     """
-    # <style>
-    # .big-font {
-    #     font-size:30px !important;
-    #     text-align:center !important;
-    # }
-    # </style>
-    # """,
-    #     unsafe_allow_html=True,
-    # )
-    # st.markdown("""
-    # <style>
-    # /* Hide the streamlit_js_eval iframe (the tiny 8px one) */
-    # iframe[title="streamlit_js_eval.streamlit_js_eval"] {
-    #     display: none !important;
-    # }
 
-    # /* If there are empty vertical blocks padding the top, collapse them */
-    # section.main > div:first-child {
-    #     padding-top: 0 !important;
-    # }
-    # </style>
-    # """, unsafe_allow_html=True)
-    # fig_dpi = 10
-
-    # config = {"toImageButtonOptions": {"height": None, "width": None, "format": "svg"}}
 
 
     #   Define figures and axis for the plots
@@ -472,8 +437,8 @@ def annealings():
           
                     # nan_indices = y.index[y.isna()].tolist()
                     # y_clean = y.dropna()
-                x = np.array(big_data[i][0]["t"])[indices.min()-start_idx: indices.max()-start_idx]
-                dif_df[f'x_{i}'] = np.array(big_data[i][0]["t"])
+                x = np.array(big_data[i][0][eje_x])[indices.min()-start_idx: indices.max()-start_idx]
+                dif_df[f'{eje_x}_{i}'] = np.array(big_data[i][0][eje_x])
                 dif_df[f'dif_{i}'] = y_dif
                 #x_clean = x[~y.isna()]
                 ints.append([i, np.trapezoid(y_dif_integrated, x)])
@@ -919,9 +884,8 @@ def annealings():
     except IndexError:
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
-    
     except UnboundLocalError:
-        pass
+            pass
     except Exception as e:
         st.write(e)
 
