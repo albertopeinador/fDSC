@@ -1011,9 +1011,9 @@ def annealings():
     except IndexError as e:
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
-            st.write(e)
+            # st.write(e)
     except UnboundLocalError as e:
-            st.write('UnboundLocal', e)
+            # st.write('UnboundLocal', e)
             pass
     except Exception as e:
         st.write(e)
