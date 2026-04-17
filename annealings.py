@@ -446,20 +446,21 @@ def annealings():
                 intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
             with ctr_panel:
                 
-                dif_margin_step = st.slider ('Dif margin step', min_value = 0, max_value = 100, value=10) / 100
+                dif_margin_step = st.slider ('Dif margin step', min_value = 0, max_value = 100, value=50) / 100
                 rev_t, dif_dwl = st.columns(2)
                 with rev_t:
                     dif_reverse_temp = st.checkbox('reverse temp')
-            max_dif_sep = max([max(abs(dif_df[f'dif_{i}']-dif_df[f'dif_{i}'])) for i in temps[1:]])
+            max_dif_sep =max([max(abs(dif_df[f'dif_{temps[i]}']-dif_df[f'dif_{temps[i-1]}'])) for i,t in enumerate(temps[1:])])
+            
             dif_margin = max([dif_margin_step / 100 * (
-                float(dif_df[f'dif_{i}'].max())
-                - float(dif_df[f'dif_{i}'].min())
+                abs(float(dif_df[f'dif_{i}'].max())
+                - float(dif_df[f'dif_{i}'].min()))
             ) for i in temps])
             for i, t in enumerate(temps[1:]):
                 if not dif_reverse_temp:
-                    dif_df[f'dif_{t}'] -= (max_dif_sep + dif_margin)*(i+1)
+                    dif_df[f'dif_{t}'] -= (max_dif_sep + dif_margin) * (i+1)
                 else:
-                    dif_df[f'dif_{t}'] += (max_dif_sep + dif_margin)*(i+1)
+                    dif_df[f'dif_{t}'] += (max_dif_sep + dif_margin) * (i+1)
             # color_list = [main_color, ref_color]
             fill_type = ["tonexty", None]
             width = [2, 1.5]
@@ -901,7 +902,7 @@ def annealings():
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
     except UnboundLocalError as e:
-            st.write('UnboundLocal', e)
+            # st.write('UnboundLocal', e)
             pass
     except Exception as e:
         st.write(e)
