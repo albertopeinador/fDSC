@@ -288,11 +288,13 @@ def annealings():
             mode = st.radio("mode", ["FULL", "MODIFY", "NORMALIZE"], horizontal=True)
         if mode == 'FULL':
             with inte:
-                reverse_col, grid_col = st.columns([.7, .3])
+                FULL_dif, reverse_col, grid_col = st.columns([1, 1.5, 1])
                 with reverse_col:
                     reverse_temp = st.checkbox('Flip temperatures')
                 with grid_col:
                     toggle_grid = st.checkbox('Grid')
+                with FULL_dif:
+                    show_full_dif = st.checkbox('Difference')
                 margin_step = (
                     st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
                                 )
@@ -378,8 +380,11 @@ def annealings():
                 )            
             with ctr_panel:
                 #   Check if you want to show difference plot
-                show_dif = st.checkbox("Show dif")
-                smooth_dif = st.checkbox("Smooth dif")
+                show, smooth = st.columns(2)
+                with show:
+                    show_dif = st.checkbox("Show dif")
+                with smooth:
+                    smooth_dif = st.checkbox("Smooth dif")
                 if mode == 'MODIFY':
                     dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
                 #   Difference plot controls in two columns (30% width for scale and 70% for position)
@@ -417,7 +422,7 @@ def annealings():
             
         
         
-            dif_df = pd.DataFrame()
+
             for i in temps:
                         #   Find indices of integration limit in the DataFrame
                 indices = big_data[i][0][eje_x][
@@ -437,46 +442,19 @@ def annealings():
           
                     # nan_indices = y.index[y.isna()].tolist()
                     # y_clean = y.dropna()
-                x = np.array(big_data[i][0][eje_x])[indices.min()-start_idx: indices.max()-start_idx]
-                dif_df[f'{eje_x}_{i}'] = np.array(big_data[i][0][eje_x])
-                dif_df[f'dif_{i}'] = y_dif
-                
+
+                x = np.array(big_data[i][0]['t'])[indices.min()-start_idx: indices.max()-start_idx]
                 #x_clean = x[~y.isna()]
                 ints.append([i, np.trapezoid(y_dif_integrated, x)])
                 intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])
-            with ctr_panel:
-                
-                dif_margin_step = st.slider ('Dif margin step', min_value = 0, max_value = 100, value=50) / 100
-                rev_t, dif_dwl = st.columns(2)
-                with rev_t:
-                    dif_reverse_temp = st.checkbox('reverse temp')
-            max_dif_sep =max([max(abs(dif_df[f'dif_{temps[i]}']-dif_df[f'dif_{temps[i-1]}'])) for i,t in enumerate(temps[1:])])
-            
-            dif_margin = max([dif_margin_step / 100 * (
-                abs(float(dif_df[f'dif_{i}'].max())
-                - float(dif_df[f'dif_{i}'].min()))
-            ) for i in temps])
-            for i, t in enumerate(temps[1:]):
-                if not dif_reverse_temp:
-                    dif_df[f'dif_{t}'] -= (max_dif_sep + dif_margin) * (i+1)
-                else:
-                    dif_df[f'dif_{t}'] += (max_dif_sep + dif_margin) * (i+1)
+
+
             # color_list = [main_color, ref_color]
             fill_type = ["tonexty", None]
             width = [2, 1.5]
         
         
-            csv_buffer = StringIO()
-            dif_df.to_csv(csv_buffer, index=False)
-            csv_data = csv_buffer.getvalue()
-            with ctr_panel:
-                with dif_dwl:
-                    st.download_button(
-                        label="Download dif",
-                        data=csv_data,
-                        file_name=f'{chip_name}difs.csv',
-                        mime='text/csv'
-                    )
+
             x_max = st.session_state["regs_" + str(Ta)][1]
             x_min = st.session_state["regs_" + str(Ta)][0]
             for i in [1, 0]:
@@ -685,10 +663,61 @@ def annealings():
             #   Define the margin using the previously defined margin_step by multiplying the step times
             #   the difference between max and min of first curve
             # st.write(big_data[temps[0]][1])
-            margin = margin_step * (
-                float(big_data[temps[0]][1]["Heat Flow"].max())
-                - float(big_data[temps[0]][1]["Heat Flow"].min())
-            )
+            with inte:
+                #   Check if you want to show difference plot
+                if show_full_dif:
+                    dif_df = pd.DataFrame()
+                    for i in temps:
+                        # indices = big_data[i][0][eje_x][
+                        # (big_data[i][0][eje_x] >= st.session_state["regs_" + str(i)][0])
+                        # & (big_data[i][0][eje_x] <= st.session_state["regs_" + str(i)][1])
+                        # ].index
+                        # start_idx = big_data[i][0].index[0]
+                        y_dif = (big_data[i][0]["Heat Flow"]
+                            - big_data[i][1]["Heat Flow"])
+
+                            # nan_indices = y.index[y.isna()].tolist()
+                            # y_clean = y.dropna()
+                        
+                        dif_df[f'{eje_x}_{i}'] = np.array(big_data[i][0][eje_x])
+                        
+                        dif_df[f'dif_{i}'] = np.array(y_dif)
+                        
+                    # show, smooth = st.columns(2)
+                    dif_df = dif_df.dropna().reindex()
+                        # dif_df[f'dif_{i}'] = dif_df[f'dif_{i}'].dropna()
+                        # dif_df[f'{eje_x}_{i}'] = dif_df[f'{eje_x}_{i}'].dropna()
+                    # with smooth:
+                    smooth_dif = st.checkbox("Smooth dif")
+                    
+                    # dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
+                    #   Difference plot controls in two columns (30% width for scale and 70% for position)
+                    scale, delta = st.columns([0.3, 0.7])
+
+                    if smooth_dif:
+                        with scale:
+                            smooth_poly = st.number_input("Polynomial order", value=2)
+                        with delta:
+                            smooth_window = st.slider(
+                                    "smooth window",
+                                    max_value=int(len(dif_df[f'dif_{temps[0]}'])*.5),
+                                    min_value=2,
+                                    value=30,
+                                    key="smooth_window",
+                                )
+                        if smooth_dif:
+                            for i in temps:
+                                dif_df[f'dif_{i}'] = savgol_filter(dif_df[f'dif_{i}'], smooth_window, smooth_poly)
+     
+                               
+
+            margin = max([margin_step * (
+                float(big_data[i][1]["Heat Flow"].max())
+                - float(big_data[i][1]["Heat Flow"].min())
+            ) for i in temps]) if not show_full_dif else max([margin_step * (
+                float(dif_df[f'dif_{i}'].max())
+                - float(dif_df[f'dif_{i}'].min())
+            ) for i in temps])
             all_margins = []
             #   move down relative to the previous curve, so the loop starts with the second curve and moves
             for i in range(1, len(big_data)):
@@ -710,7 +739,10 @@ def annealings():
                     - big_data[temps[i - 1]][0]["Heat Flow"]
                 ).max(),)
                 all_margins.append(dif)
-            dif = max(all_margins)
+            dif = max(all_margins) if not show_full_dif else max([margin_step / 100 * (
+                                                                abs(float(dif_df[f'dif_{i}'].max())
+                                                                - float(dif_df[f'dif_{i}'].min()))
+                                                            ) for i in temps])
             for i in range(1, len(big_data)):
                 if not reverse_temp:
                     #   Move both main and reference curves down by
@@ -720,30 +752,50 @@ def annealings():
                     #   Shift curve up
                     big_data[temps[i]][0]["Heat Flow"] += (dif + margin)*i
                     big_data[temps[i]][1]["Heat Flow"] += (dif + margin)*i
-            
-            yaxis_range = [
-                min(
-                    min(big_data[temps[-1]][0]["Heat Flow"]),
-                    min(big_data[temps[-1]][1]["Heat Flow"]),
-                )
-                * 0.98,
-                max(
-                    max(big_data[temps[0]][0]["Heat Flow"]),
-                    max(big_data[temps[0]][1]["Heat Flow"]),
-                )
-                * 1.01,
-            ] if not reverse_temp else [
-                min(
-                    min(big_data[temps[0]][0]["Heat Flow"]),
-                    min(big_data[temps[0]][1]["Heat Flow"]),
-                )
-                * 0.98,
-                max(
-                    max(big_data[temps[-1]][0]["Heat Flow"]),
-                    max(big_data[temps[-1]][1]["Heat Flow"]),
-                )
-                * 1.01,]
-
+            if show_full_dif:
+                for i, t in enumerate(temps[1:]):
+                    if not reverse_temp:
+                        dif_df[f'dif_{t}'] -= (dif + margin) * (i+1)
+                    else:
+                        dif_df[f'dif_{t}'] += (dif + margin) * (i+1)
+            if not show_full_dif:
+                yaxis_range = [
+                    min(
+                        min(big_data[temps[-1]][0]["Heat Flow"]),
+                        min(big_data[temps[-1]][1]["Heat Flow"]),
+                    )
+                    * 0.98,
+                    max(
+                        max(big_data[temps[0]][0]["Heat Flow"]),
+                        max(big_data[temps[0]][1]["Heat Flow"]),
+                    )
+                    * 1.01,
+                ] if not reverse_temp else [
+                    min(
+                        min(big_data[temps[0]][0]["Heat Flow"]),
+                        min(big_data[temps[0]][1]["Heat Flow"]),
+                    )
+                    * 0.98,
+                    max(
+                        max(big_data[temps[-1]][0]["Heat Flow"]),
+                        max(big_data[temps[-1]][1]["Heat Flow"]),
+                    )
+                    * 1.01,]
+            else:
+                yaxis_range = [
+                    min(dif_df[f'dif_{temps[-1]}']
+                    )
+                    * 0.98,
+                    max(dif_df[f'dif_{temps[0]}']
+                    )
+                    * 1.01
+                ] if not reverse_temp else [
+                    min(dif_df[f'dif_{temps[0]}']
+                    )
+                    * 0.98,
+                    max(dif_df[f'dif_{temps[-1]}']
+                    )
+                    * 1.01]
             with inte:
                 # Define all possible column keys
                 column_keys = ['Index', 't', 'Tr', 'Ts', 'Heat Flow']
@@ -757,42 +809,87 @@ def annealings():
                     st.warning('SELECT AT LEAST 2 COLUMNS')
                     selected_columns = column_keys
                 # Filter columns whose name contains any of the selected keys
-                data_csv_string = bigdata_to_csv(big_data, selected_cols=selected_columns)
-                
+                if not show_full_dif:
+                    data_csv_string = bigdata_to_csv(big_data, selected_cols=selected_columns)
+                    FULL_dwl_name = f"{chip_name}data.csv"
+                else:
+                    csv_buffer = StringIO()
+                    dif_df.to_csv(csv_buffer, index=False)
+                    data_csv_string = csv_buffer.getvalue()
+                    FULL_dwl_name = f"{chip_name}difference.csv"
                 st.download_button(
                         label="Download CSV",
                         data=data_csv_string,
-                        file_name=f"{chip_name}data.csv",       #   Chip names in downloads
+                        file_name=FULL_dwl_name,       #   Chip names in downloads
                         mime="text/csv"
                                     )
             #st.dataframe(big_data)
-            for i in temps:
+            for n, i in enumerate(temps):
                 # color_list = [main_color, ref_color]
-                fill_type = ["tonexty", None]
-                text = ["", f'{i} ºC']
+                fill_type = ["tonexty", None] if not show_full_dif else ['tonexty']
+                text = ["", f'{i} ºC'] if not show_full_dif else [f'{i} ºC']
                 width = [2, 1.5]
                 x_max = st.session_state["regs_" + str(i)][1]
                 x_min = st.session_state["regs_" + str(i)][0]
-                
-                for j in [1, 0]:
-                    line_c = color_dict[i] if j==0 else ref_color
+                if not show_full_dif:    
+                    for j in [1, 0]:
+                        line_c = color_dict[i] if j==0 else ref_color
+                        fig.add_trace(
+                            go.Scatter(
+                                x = big_data[i][j][eje_x],
+                                y=big_data[i][j]["Heat Flow"],
+                                #line_color=color_list[j],
+                                # fill=fill_type[j],
+                                # fillcolor=shade_color,
+                                line = dict(color=line_c, width = width[j])
+                            )
+                        )
+                        fig.add_annotation(
+                            x=big_data[i][j][eje_x].iloc[-1]
+                            * 1.1,  # x position of the last point
+                            y=big_data[i][j]["Heat Flow"].iloc[
+                                -1
+                            ],  # y position of the last point
+                            text=text[j],  # The text you want to display
+                            showarrow=False,  # Optionally show an arrow pointing to the last point
+                            arrowhead=2,  # Customize the arrowhead
+                            ax=20,
+                            ay=-20,  # Adjust the position of the annotation
+                            font=dict(
+                                size=15, color=line_c
+                            ),  # Customize the appearance of the text
+                        )
+                    for j in [1, 0]:
+                        line_c = color_dict[i] if j==0 else ref_color
+                        integration_mask = (big_data[int(i)][j][eje_x] >= x_min) & (big_data[int(i)][j][eje_x] <= x_max)
+                        fig.add_trace(
+                            go.Scatter(
+                                x = big_data[i][j][eje_x][integration_mask],
+                                y=big_data[i][j]["Heat Flow"][integration_mask],
+                                #line_color=color_list[j],
+                                fill=fill_type[j],
+                                fillcolor=hex_to_rgba(line_c),
+                                line = dict(color=line_c, width = width[j])
+                            )
+                        )
+                else:
+
+                    line_c = color_dict[i]
                     fig.add_trace(
                         go.Scatter(
-                            x = big_data[i][j][eje_x],
-                            y=big_data[i][j]["Heat Flow"],
+                            x = dif_df[f'{eje_x}_{i}'],
+                            y=dif_df[f'dif_{i}'],
                             #line_color=color_list[j],
                             # fill=fill_type[j],
                             # fillcolor=shade_color,
-                            line = dict(color=line_c, width = width[j])
+                            line = dict(color=line_c, width = width[0])
                         )
                     )
                     fig.add_annotation(
-                        x=big_data[i][j][eje_x].iloc[-1]
+                        x=dif_df[f'{eje_x}_{i}'].iloc[-1]
                         * 1.1,  # x position of the last point
-                        y=big_data[i][j]["Heat Flow"].iloc[
-                            -1
-                        ],  # y position of the last point
-                        text=text[j],  # The text you want to display
+                        y=dif_df[f'dif_{i}'].iloc[-1],  # y position of the last point
+                        text=text[0],  # The text you want to display
                         showarrow=False,  # Optionally show an arrow pointing to the last point
                         arrowhead=2,  # Customize the arrowhead
                         ax=20,
@@ -801,17 +898,29 @@ def annealings():
                             size=15, color=line_c
                         ),  # Customize the appearance of the text
                     )
-                for j in [1, 0]:
-                    line_c = color_dict[i] if j==0 else ref_color
-                    integration_mask = (big_data[int(i)][j][eje_x] >= x_min) & (big_data[int(i)][j][eje_x] <= x_max)
+
+                    line_c = color_dict[i]
+                    integration_mask = (dif_df[f'{eje_x}_{i}'] >= x_min) & (dif_df[f'{eje_x}_{i}'] <= x_max)
+                    
+                    baseline = n*(dif + margin) if reverse_temp else -n*(dif + margin)
                     fig.add_trace(
                         go.Scatter(
-                            x = big_data[i][j][eje_x][integration_mask],
-                            y=big_data[i][j]["Heat Flow"][integration_mask],
+                            x = dif_df[f'{eje_x}_{i}'][integration_mask],
+                            y=[baseline]*len(dif_df[f'{eje_x}_{i}'][integration_mask]),
                             #line_color=color_list[j],
-                            fill=fill_type[j],
+                            # fill=fill_type[0],
                             fillcolor=hex_to_rgba(line_c),
-                            line = dict(color=line_c, width = width[j])
+                            line = dict(color=line_c, width = 0)
+                        )
+                    )
+                    fig.add_trace(
+                        go.Scatter(
+                            x = dif_df[f'{eje_x}_{i}'][integration_mask],
+                            y=dif_df[f'dif_{i}'][integration_mask],
+                            #line_color=color_list[j],
+                            fill=fill_type[0],
+                            fillcolor=hex_to_rgba(line_c),
+                            line = dict(color=line_c, width = width[0])
                         )
                     )
                 #   Plot the labels on each curve
@@ -865,6 +974,7 @@ def annealings():
                                     mime="text/csv")
         #   Show main graph
         xaxis_range = [load_begin * 0.98, load_fin * 1.05]
+        # print(dif_df[f'dif_{temps[-1]}'].iloc[0])
         sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
         fig1_h = 580 if mode == 'FULL' else 580
         if eje_x != 't':
@@ -898,11 +1008,12 @@ def annealings():
                     'width': 450,
                     'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
                 }})#width = 'container', **{"config": config})
-    except IndexError:
+    except IndexError as e:
         with graf:
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
+            st.write(e)
     except UnboundLocalError as e:
-            # st.write('UnboundLocal', e)
+            st.write('UnboundLocal', e)
             pass
     except Exception as e:
         st.write(e)
