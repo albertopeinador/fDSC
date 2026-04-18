@@ -295,8 +295,12 @@ def annealings():
                     toggle_grid = st.checkbox('Grid')
                 with FULL_dif:
                     show_full_dif = st.checkbox('Difference')
+                max_margin_step = 100 #if not show_full_dif else 50
+                min_margin_step = - 10 #if not show_full_dif else -30
+                # margin_scaler = 100 if not show_full_dif else 10
+                
                 margin_step = (
-                    st.slider("margin_step", min_value=0, max_value=100, value=10) / 100
+                    st.slider("margin_step", min_value=min_margin_step, max_value=max_margin_step, value=10) / 10
                                 )
         for i in temps:
         # if mode != 'FULL':
@@ -408,7 +412,7 @@ def annealings():
                                 "smooth window",
                                 max_value=int(len(dif)*.5),
                                 min_value=2,
-                                value=30,
+                                value=100,
                                 key="smooth_window",
                             )
                     if smooth_dif:
@@ -418,10 +422,6 @@ def annealings():
                 #   Divide into three columns: one for each color to define
                 col, ref, shading = st.columns(3)
                 #   Create color pickers in each column for each color
-        
-            
-        
-        
 
             for i in temps:
                         #   Find indices of integration limit in the DataFrame
@@ -429,6 +429,7 @@ def annealings():
                     (big_data[i][0][eje_x] >= st.session_state["regs_" + str(i)][0])
                     & (big_data[i][0][eje_x] <= st.session_state["regs_" + str(i)][1])
                 ].index
+                
                 start_idx = big_data[i][0].index[0]
                 y_dif = (big_data[i][0]["Heat Flow"]
                     - big_data[i][1]["Heat Flow"])
@@ -673,7 +674,7 @@ def annealings():
                         # & (big_data[i][0][eje_x] <= st.session_state["regs_" + str(i)][1])
                         # ].index
                         # start_idx = big_data[i][0].index[0]
-                        y_dif = (big_data[i][0]["Heat Flow"]
+                        full_y_dif = (big_data[i][0]["Heat Flow"]
                             - big_data[i][1]["Heat Flow"])
 
                             # nan_indices = y.index[y.isna()].tolist()
@@ -681,7 +682,7 @@ def annealings():
                         
                         dif_df[f'{eje_x}_{i}'] = np.array(big_data[i][0][eje_x])
                         
-                        dif_df[f'dif_{i}'] = np.array(y_dif)
+                        dif_df[f'dif_{i}'] = np.array(full_y_dif)
                         
                     # show, smooth = st.columns(2)
                     dif_df = dif_df.dropna().reindex()
@@ -702,7 +703,7 @@ def annealings():
                                     "smooth window",
                                     max_value=int(len(dif_df[f'dif_{temps[0]}'])*.5),
                                     min_value=2,
-                                    value=30,
+                                    value=100,
                                     key="smooth_window",
                                 )
                         if smooth_dif:
@@ -711,13 +712,13 @@ def annealings():
      
                                
 
-            margin = max([margin_step * (
-                float(big_data[i][1]["Heat Flow"].max())
-                - float(big_data[i][1]["Heat Flow"].min())
-            ) for i in temps]) if not show_full_dif else max([margin_step * (
-                float(dif_df[f'dif_{i}'].max())
-                - float(dif_df[f'dif_{i}'].min())
-            ) for i in temps])
+            # margin = max([margin_step * (
+            #     float(big_data[i][1]["Heat Flow"].max())
+            #     - float(big_data[i][1]["Heat Flow"].min())
+            # ) for i in temps]) if not show_full_dif else max([margin_step * (
+            #     float(dif_df[f'dif_{i}'].max())
+            #     - float(dif_df[f'dif_{i}'].min())
+            # ) for i in temps])
             all_margins = []
             #   move down relative to the previous curve, so the loop starts with the second curve and moves
             for i in range(1, len(big_data)):
@@ -739,10 +740,19 @@ def annealings():
                     - big_data[temps[i - 1]][0]["Heat Flow"]
                 ).max(),)
                 all_margins.append(dif)
-            dif = max(all_margins) if not show_full_dif else max([margin_step / 100 * (
-                                                                abs(float(dif_df[f'dif_{i}'].max())
-                                                                - float(dif_df[f'dif_{i}'].min()))
-                                                            ) for i in temps])
+            # if reverse_temp:
+            dif = max(all_margins) if not show_full_dif else max([np.abs(max(dif_df[f'dif_{temps[i]}']
+                                                                    - (dif_df[f'dif_{temps[i-1]}'])))
+                                                                 for i in range(1, len(temps))])
+            
+            # else:
+            #     dif = max(all_margins) if not show_full_dif else max([margin_step * (
+            #                                         abs(float(dif_df[f'dif_{temps[i]}'].max())
+            #                                         - float(dif_df[f'dif_{temps[i+1]}'].min()))
+            #                                     ) for i in range(len(temps)-1)])
+            # st.write(dif)
+            margin = margin_step * dif
+            st.write(dif, margin)
             for i in range(1, len(big_data)):
                 if not reverse_temp:
                     #   Move both main and reference curves down by
@@ -797,19 +807,20 @@ def annealings():
                     )
                     * 1.01]
             with inte:
-                # Define all possible column keys
-                column_keys = ['Index', 't', 'Tr', 'Ts', 'Heat Flow']
 
-                selected_columns = st.multiselect(
-                    "Select columns to keep:",
-                    options=column_keys,
-                    default=['Tr', 'Heat Flow']  # all selected by default
-                                    )
-                if len(selected_columns)<2:
-                    st.warning('SELECT AT LEAST 2 COLUMNS')
-                    selected_columns = column_keys
-                # Filter columns whose name contains any of the selected keys
                 if not show_full_dif:
+                    # Define all possible column keys
+                    column_keys = ['Index', 't', 'Tr', 'Ts', 'Heat Flow']
+
+                    selected_columns = st.multiselect(
+                        "Select columns to keep:",
+                        options=column_keys,
+                        default=['Tr', 'Heat Flow']  # all selected by default
+                                        )
+                    if len(selected_columns)<2:
+                        st.warning('SELECT AT LEAST 2 COLUMNS')
+                        selected_columns = column_keys
+                    # Filter columns whose name contains any of the selected keys
                     data_csv_string = bigdata_to_csv(big_data, selected_cols=selected_columns)
                     FULL_dwl_name = f"{chip_name}data.csv"
                 else:
@@ -831,6 +842,7 @@ def annealings():
                 width = [2, 1.5]
                 x_max = st.session_state["regs_" + str(i)][1]
                 x_min = st.session_state["regs_" + str(i)][0]
+                baseline = n*(dif + margin) if reverse_temp else -n*(dif + margin)
                 if not show_full_dif:    
                     for j in [1, 0]:
                         line_c = color_dict[i] if j==0 else ref_color
@@ -873,7 +885,7 @@ def annealings():
                             )
                         )
                 else:
-
+                    
                     line_c = color_dict[i]
                     fig.add_trace(
                         go.Scatter(
@@ -888,7 +900,7 @@ def annealings():
                     fig.add_annotation(
                         x=dif_df[f'{eje_x}_{i}'].iloc[-1]
                         * 1.1,  # x position of the last point
-                        y=dif_df[f'dif_{i}'].iloc[-1],  # y position of the last point
+                        y=baseline,  # y position of the last point
                         text=text[0],  # The text you want to display
                         showarrow=False,  # Optionally show an arrow pointing to the last point
                         arrowhead=2,  # Customize the arrowhead
@@ -902,7 +914,7 @@ def annealings():
                     line_c = color_dict[i]
                     integration_mask = (dif_df[f'{eje_x}_{i}'] >= x_min) & (dif_df[f'{eje_x}_{i}'] <= x_max)
                     
-                    baseline = n*(dif + margin) if reverse_temp else -n*(dif + margin)
+                    
                     fig.add_trace(
                         go.Scatter(
                             x = dif_df[f'{eje_x}_{i}'][integration_mask],
