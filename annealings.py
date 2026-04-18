@@ -752,7 +752,7 @@ def annealings():
             #                                     ) for i in range(len(temps)-1)])
             # st.write(dif)
             margin = margin_step * dif
-            st.write(dif, margin)
+            # st.write(dif, margin)
             for i in range(1, len(big_data)):
                 if not reverse_temp:
                     #   Move both main and reference curves down by
