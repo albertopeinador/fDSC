@@ -318,11 +318,18 @@ def annealings():
                     * (big_data[i][0]["Heat Flow"] - big_data[i][1]["Heat Flow"]).max(),
                     "Heat Flow",
                 )
-                
-                st.session_state["regs_" + str(i)] = [
-                    big_data[i][0][eje_x][left],
-                    big_data[i][0][eje_x][right],
-                ]
+                try:
+                    st.session_state["regs_" + str(i)] = [
+                        big_data[i][0][eje_x][left],
+                        big_data[i][0][eje_x][right],
+                    ]
+                except:
+                    with ctr_panel:
+                        st.warning(f'Integration limit for Ta = {i} are bad :(')
+                    st.session_state["regs_" + str(i)] = [
+                        big_data[i][0][eje_x].iloc[0],
+                        big_data[i][0][eje_x].iloc[-1],
+                    ]
                 if i == temps[-1]:
                     st.session_state["x_change_check"] = eje_x
             #st.session_state[f"int_limits_{i}"] = st.session_state["regs_" + str(i)]
@@ -501,9 +508,31 @@ def annealings():
                             y=float(dif_scale) * dif
                             + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
                             mode="lines",
+                            
                             line=dict(color='red', width=1.5),
                         )
                     )
+                    fig.add_trace(
+                        go.Scatter(
+                            x=big_data[int(Ta)][0][eje_x][integration_mask],
+                            y=[dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min())]*len(big_data[int(Ta)][0][eje_x][integration_mask]),
+                            mode="lines",
+                            
+                            line=dict(color=color_dict[Ta], width=0),
+                        )
+                    )
+                    fig.add_trace(
+                        go.Scatter(
+                            x=big_data[int(Ta)][0][eje_x][integration_mask],
+                            y=float(dif_scale) * dif[integration_mask]
+                            + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
+                            mode="lines",
+                            fill = 'tonexty',
+                            fillcolor = hex_to_rgba("#e32525"),
+                            line=dict(color="#e32525", width=0),
+                        )
+                    )
+
                 else:
                     fig.add_trace(
                         go.Scatter(
@@ -511,6 +540,25 @@ def annealings():
                             y=float(dif_scale) * dif
                             + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
                             mode="lines",
+                        )
+                    )
+                    fig.add_trace(
+                        go.Scatter(
+                            x=big_data[int(Ta)][1][eje_x][integration_mask],
+                            y=[dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min())]*len(big_data[int(Ta)][1][eje_x][integration_mask]),
+                            mode="lines",
+                            line=dict(color=color_dict[Ta], width=0),
+                        )
+                    )
+                    fig.add_trace(
+                        go.Scatter(
+                            x=big_data[int(Ta)][1][eje_x][integration_mask],
+                            y=float(dif_scale) * dif[integration_mask]
+                            + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
+                            mode="lines",
+                            fill = 'tonexty',
+                            fillcolor = hex_to_rgba("#e32525"),
+                            line=dict(color="#e32525", width=0),
                         )
                     )
         #except ValueError:
@@ -679,10 +727,11 @@ def annealings():
 
                             # nan_indices = y.index[y.isna()].tolist()
                             # y_clean = y.dropna()
+                        if len(np.array(big_data[i][0][eje_x])) > len(dif_df):
+                            dif_df = dif_df.reindex(range(len(np.array(big_data[i][0][eje_x]))))
+                        dif_df[f'{eje_x}_{i}'] = pd.Series(np.array(big_data[i][0][eje_x]))
                         
-                        dif_df[f'{eje_x}_{i}'] = np.array(big_data[i][0][eje_x])
-                        
-                        dif_df[f'dif_{i}'] = np.array(full_y_dif)
+                        dif_df[f'dif_{i}'] = pd.Series(np.array(full_y_dif))
                         
                     # show, smooth = st.columns(2)
                     dif_df = dif_df.dropna().reindex()
@@ -741,10 +790,13 @@ def annealings():
                 ).max(),)
                 all_margins.append(dif)
             # if reverse_temp:
-            dif = max(all_margins) if not show_full_dif else max([np.abs(max(dif_df[f'dif_{temps[i]}']
-                                                                    - (dif_df[f'dif_{temps[i-1]}'])))
-                                                                 for i in range(1, len(temps))])
-            
+            if len(temps) > 1:
+
+                dif = max(all_margins) if not show_full_dif else max([np.abs(max(dif_df[f'dif_{temps[i]}']
+                                                                        - (dif_df[f'dif_{temps[i-1]}'])))
+                                                                    for i in range(1, len(temps))])
+            else:
+                dif = 0
             # else:
             #     dif = max(all_margins) if not show_full_dif else max([margin_step * (
             #                                         abs(float(dif_df[f'dif_{temps[i]}'].max())
@@ -813,7 +865,7 @@ def annealings():
                     column_keys = ['Index', 't', 'Tr', 'Ts', 'Heat Flow']
 
                     selected_columns = st.multiselect(
-                        "Select columns to keep:",
+                        "Select columns to download:",
                         options=column_keys,
                         default=['Tr', 'Heat Flow']  # all selected by default
                                         )
@@ -969,9 +1021,9 @@ def annealings():
                     'toImageButtonOptions': {
                                         'format': 'png', # one of png, svg, jpeg, webp
                                         'filename': f'{chip_name}_enthalpies',
-                                        'height': 500,
-                                        'width': 500,
-                                        'scale': 3 # Multiply title/legend/axis/canvas sizes by this factor
+                                        'height': 430,
+                                        'width': 450,
+                                        'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
                                     }})
                 _, dwl_ent, _ = st.columns([0.7, 1, 0.7])
                 result_string = "\n".join(

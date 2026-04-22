@@ -36,7 +36,7 @@ def find_int_region(df_tuple, thold, y_name):
         left_index = 0
     #st.write('About to start with right index')
     # Find right bound
-    #st.write(dif.index[-1] - 1)
+    st.write(dif.index[-1] - 1)
     while right_index < dif.index[-1] - 1 and dif[right_index] > thold:
         right_index += 1
         if dif.index[-1] - 1 == right_index:
