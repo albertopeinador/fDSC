@@ -53,7 +53,7 @@ def welcome():
 
     _, left,center, right, _ = st.columns([0.2, left_width, left_width, right_width,0.2], gap='small')
     with left:
-        st.image("static/screenshots/annealings_FULL.png", caption = 'Example separated curves')
+        st.image("static/screenshots/annealings_full.png", caption = 'Example separated curves')
     with center:
         st.image("static/screenshots/annealings_diff.png", caption = 'Example of separated differences to the reference')
     with right:
