@@ -36,7 +36,7 @@ def find_int_region(df_tuple, thold, y_name):
         left_index = 0
     #st.write('About to start with right index')
     # Find right bound
-    st.write(dif.index[-1] - 1)
+    # st.write(dif.index[-1] - 1)
     while right_index < dif.index[-1] - 1 and dif[right_index] > thold:
         right_index += 1
         if dif.index[-1] - 1 == right_index:
@@ -72,5 +72,5 @@ thold):
     return left_index, right_index'''
 
 def integ(df, y_name, x_name):
-    integral = np.trapz(df[y_name], df[x_name])
+    integral = np.trapezoid(df[y_name], df[x_name])
     return integral

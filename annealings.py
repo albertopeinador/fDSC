@@ -501,7 +501,9 @@ def annealings():
                 )
             #   Plot difference
             if show_dif:
+                
                 if len(big_data[int(Ta)][0][eje_x]) == len(dif):
+                    integration_mask = (big_data[int(Ta)][0][eje_x] >= x_min) & (big_data[int(Ta)][0][eje_x] <= x_max)
                     fig.add_trace(
                         go.Scatter(
                             x=big_data[int(Ta)][0][eje_x],
@@ -534,12 +536,14 @@ def annealings():
                     )
 
                 else:
+                    integration_mask = (big_data[int(Ta)][1][eje_x] >= x_min) & (big_data[int(Ta)][1][eje_x] <= x_max)
                     fig.add_trace(
                         go.Scatter(
                             x=big_data[int(Ta)][1][eje_x],
                             y=float(dif_scale) * dif
                             + dif_delta * np.abs(big_data[int(Ta)][0]["Heat Flow"].min()),
                             mode="lines",
+                            line=dict(color='red', width=1.5),
                         )
                     )
                     fig.add_trace(
@@ -966,7 +970,7 @@ def annealings():
                     line_c = color_dict[i]
                     integration_mask = (dif_df[f'{eje_x}_{i}'] >= x_min) & (dif_df[f'{eje_x}_{i}'] <= x_max)
                     
-                    
+
                     fig.add_trace(
                         go.Scatter(
                             x = dif_df[f'{eje_x}_{i}'][integration_mask],
@@ -987,6 +991,7 @@ def annealings():
                             line = dict(color=line_c, width = width[0])
                         )
                     )
+
                 #   Plot the labels on each curve
                 fig.update_traces(textposition="middle right")
                 fig.update_xaxes(
@@ -1080,7 +1085,8 @@ def annealings():
             # st.write('UnboundLocal', e)
             pass
     except Exception as e:
-        st.write(e)
+        # st.write(e)
+        pass
 
     #except TypeError:
     #    with graf:
