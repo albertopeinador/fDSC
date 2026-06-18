@@ -45,7 +45,7 @@ def load_files(file_contents, file_names, load_lims, eje_x):
             df = df[(df[eje_x] >= load_lims[0]) & (df[eje_x] <= load_lims[1])]
             big_data[t] = (None, df)
         elif file_1_content is None:
-            st.write('No File1')
+            st.write(f'No Reference for temperature: {t}')
             mod, chip_name = fh.modify_text_file(file_0_content.decode('latin1'))
             df = pd.read_csv(StringIO(mod), sep=',', encoding='latin1', skipinitialspace=True)
             df = df.apply(pd.to_numeric, errors='coerce')
