@@ -1085,7 +1085,7 @@ def annealings():
             # st.write('UnboundLocal', e)
             pass
     except Exception as e:
-        # st.write(e)
+        st.write(e)
         pass
 
     #except TypeError:
