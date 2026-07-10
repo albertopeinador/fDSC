@@ -22,6 +22,7 @@ def load_files(file_contents, file_names, load_lims, eje_x):
     # st.write(file_dict)
     # st.write(temps)
     for t in temps:
+        # st.write(t, file_dict[t])
         file_0_content = file_dict[t][0]
         file_1_content = file_dict[t][1]
 

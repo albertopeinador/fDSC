@@ -1079,11 +1079,13 @@ def annealings():
                 }})#width = 'container', **{"config": config})
     except IndexError as e:
         with graf:
+
             st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
-            # st.write(e)
+            
     except UnboundLocalError as e:
             # st.write('UnboundLocal', e)
             pass
+    
     except Exception as e:
         st.write(e)
         pass
