@@ -12,6 +12,7 @@
 !static/screenshots
 !static/icons
 !static/*/*.png
+!static/*/*.ico
 !static/*/*.svg
 nav_test.py
 fdsc_test.py
