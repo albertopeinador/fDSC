@@ -17,7 +17,7 @@ def welcome():
         <div style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: transparent;">
             <div style="width: 85%; margin: auto; padding-top: 20px;">
                 <div style="font-size: 3em; text-align: center; margin-bottom: 20px; margin-top: -100px">
-                    FFFDSC
+                    🥄
                 </div>
                 <div style="font-size: 1.3em; text-align:center; margin-bottom: 20px;">
                     Our Data Processing Tool for Flash Differential Scanning Calorimetry (a.k.a Fast Differential Calorimetry)

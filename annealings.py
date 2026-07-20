@@ -101,7 +101,7 @@ def common_substrings(strings):
 def annealings():
 
 
-
+    st.set_page_config(page_title = "🥄", page_icon="./Tab.ico", layout = "wide")
     #   Define figures and axis for the plots
 
 

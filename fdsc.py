@@ -16,7 +16,7 @@ def svg_to_base64(path: str) -> str:
 
 
 
-st.set_page_config(layout="wide")
+st.set_page_config(page_title = "🥄", page_icon="./Tab.ico", layout = "wide")
 
 # st.markdown("""
 # <style>
