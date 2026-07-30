@@ -636,19 +636,21 @@ def annealings():
 
             exp_text = str(expon).translate(superscripts)
             fig2.update_xaxes(
-                title_text='Temperature / ºC',
+                title_text='Temperature / °C',
                 showline=True,
+                linecolor = 'black',
                 ticks='inside',
                 tickcolor='black',
                 mirror = 'all',
                 minor=dict(ticklen=2, ticks='inside'))
             fig2.update_yaxes(
-                title_text = f"ΔH / 10{exp_text} mJ",
+                title_text = f"ΔH / 10<sup>{expon}</sup> mJ",
                 tickformat="%d",        # scientific notation
                 exponentformat="power",  # shows as 10^n instead of e notation
                 showexponent="all",       # or "first" for cleaner look
                 showgrid = False,
                 showline=True,
+                linecolor = 'black',
                 ticks='inside',
                 tickcolor='black',
                 mirror = 'all',
@@ -658,13 +660,14 @@ def annealings():
                 plot_bgcolor="rgba(0,0,0,0)",    # inside the axes
                 xaxis=dict(
                     title=dict(
-                        font=dict(size=18, color="black")
+                        font=dict(size=18, color="black", family = 'Arial')
                     ),
-                    tickfont=dict(size=16, color="black")
+                    tickfont=dict(size=16, color="black"),
+                   
                 ),
                 yaxis=dict(
                     title=dict(
-                        font=dict(size=18, color="black")
+                        font=dict(size=18, color="black", family = 'Arial')
                     ),
                     tickfont=dict(size=16, color="black")
                 )
@@ -1053,6 +1056,7 @@ def annealings():
                 fig.update_traces(textposition="middle right")
                 fig.update_xaxes(
                                 showline=True,
+                                linecolor = 'black',
                                 # mirror = 'all',
                                 ticks='inside',
                                 tickcolor='black',
@@ -1071,6 +1075,7 @@ def annealings():
             fig.update_traces(textposition="middle right")
             fig.update_xaxes(
                             showline=True,
+                            linecolor = 'black',
                             ticks='inside',
                             tickcolor='black',
                             minor=dict(ticklen=2, ticks='inside'))
@@ -1112,7 +1117,7 @@ def annealings():
                 margin=dict(l=5, r=5, t=0, b=5),
 
                 yaxis=dict(visible=False, showline=True, mirror ='all'),
-                xaxis_title='Temperature / ºC',
+                xaxis_title='Temperature / °C',
                 xaxis=dict(visible = True,
                     title=dict(
                         font=dict(size=18, color="black", family='Arial')
