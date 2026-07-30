@@ -14,7 +14,24 @@ from matplotlib.colors import rgb2hex
 from io import StringIO
 import warnings
 import json
+import Assets.one_file_loader as ofl
 
+
+def normalize_by_smallest_exponent(s: pd.Series):
+    # Absolute values, excluding zeros and NaNs
+    nonzero = s[s.ne(0)].abs().dropna()
+
+    if nonzero.empty:
+        return s.copy(), 0
+
+    smallest = nonzero.min()
+
+    # Scientific-notation exponent using NumPy
+    exponent = int(np.floor(np.log10(smallest)))
+
+    scale = 10.0 ** (-exponent)
+
+    return s * scale, exponent
 
 
 warnings.filterwarnings("ignore")
@@ -109,8 +126,9 @@ def annealings():
 
     #   Create the three main columns - one for main controls, one for the plots
     #       and one last one for the integrals plot and some adicional controls
+    
 
-    ctr_panel, graf, inte = st.columns([3, 3, 4.5])
+    ctr_panel, temps_load = st.columns([3, 7.5])
 
     #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
     #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
@@ -206,14 +224,14 @@ def annealings():
             with main1:
                 shade_color = st.color_picker(
                     "Start",
-                    value="#5a93e4",
+                    value="#1B65CF",
                     key="shade_color",
                     # on_change=update_shade,
                 )
             with main2:
                 shade_color2 = st.color_picker(
                     "Mid",
-                    value="#6c6c6c",
+                    value="#9A79A2",
                     key="shade_color_2",
                     # on_change=update_shade,
                 )
@@ -221,7 +239,7 @@ def annealings():
             with main3:
                 shade_color3 = st.color_picker(
                     "End",
-                    value="#e06161",
+                    value="#E82626",
                     key="shade_color_3",
                     # on_change=update_shade,
                 )
@@ -233,27 +251,39 @@ def annealings():
         norm_lims_default = [340.0, 410.0]
     #   Everything in a try to avoid errors from no files in first run
     # is not None:
+    # if 'close_bubble' not in st.session_state:
+    #     st.session_state['close_bubble'] = False
     try:
         # Extract file contents and names
-        file_hashes = []
-        file_contents = []
-        file_names = []
-        for uploaded_file in files:
-            file_hash, file_content = ld.compute_file_hash(uploaded_file)
-            file_hashes.append(file_hash)
-            file_contents.append(file_content)  # Store file content
-            file_names.append(uploaded_file.name)  # Store file name separately
-        #   Scan file names for relevant info and load them as dictionary with tuples dataframes.
-        #   The first dataframe (big_data[Ta][0])
-        #   contains data for Ta measurement and the second element (big_data[Ta][1]) is the reference.
-        temps, big_data, chip_name = ld.load_files(
-            file_contents, file_names, [load_begin, load_fin], eje_x
-        )
+        if len(files) > 1:
+            file_hashes = []
+            file_contents = []
+            file_names = []
+            for uploaded_file in files:
+                file_hash, file_content = ld.compute_file_hash(uploaded_file)
+                file_hashes.append(file_hash)
+                file_contents.append(file_content)  # Store file content
+                file_names.append(uploaded_file.name)  # Store file name separately
+            #   Scan file names for relevant info and load them as dictionary with tuples dataframes.
+            #   The first dataframe (big_data[Ta][0])
+            #   contains data for Ta measurement and the second element (big_data[Ta][1]) is the reference.
+            temps, big_data, chip_name = ld.load_files(
+                file_contents, file_names, [load_begin, load_fin], eje_x
+            )
+
+            # st.write(big_data[temps[0]][0])
+        elif len(files) == 1:
+            chip_name, n_temps, segments = ofl.segmentation(files)
+            with temps_load:
+                temps = ofl.find_temps(files[0].name, n_temps)
+            big_data = ofl.get_big_data(segments, temps, eje_x, load_begin, load_fin)
+
         if 'chip_name' in st.session_state:
             if st.session_state['chip_name'] != chip_name:
                 with load:
                     st.warning('Different chip data loaded')
         st.session_state['chip_name'] = chip_name
+
         # common_substring = common_substrings(file_names)
         # # st.write(common_substring)
         # if common_substring != []:
@@ -267,6 +297,12 @@ def annealings():
             #    st.session_state[key_name] = 0.  # Initial value for each key
             #if f"slider_value_{i}" not in st.session_state:
             #    st.session_state[f"slider_value_{i}"] = 0.0
+        if 'closed_bubble' in st.session_state:
+            if not st.session_state['closed_bubble']:
+                raise KeyboardInterrupt
+        
+        with temps_load:
+            graf, inte = st.columns([3, 3.5])
         if "selected_key" not in st.session_state:
             st.session_state.selected_key = temps[0]
         #   Initialize list to store integral results
@@ -285,7 +321,9 @@ def annealings():
             color = mcolors.to_hex(color)
             color_dict[v] = color
         with ctr_panel:
-            mode = st.radio("mode", ["FULL", "MODIFY", "NORMALIZE"], horizontal=True)
+            _, col, _ = st.columns ([1,3,1])
+            with col:
+                mode = st.radio("mode", ["FULL", "MODIFY"], horizontal=True, label_visibility="collapsed")
         if mode == 'FULL':
             with inte:
                 FULL_dif, reverse_col, grid_col = st.columns([1, 1.5, 1])
@@ -591,27 +629,46 @@ def annealings():
             #     color = cmap(colors[i])
             #     ints[i].append(str(rgb2hex(color)))
             intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])#, "cols"])
+            intsdf['enthalpies'], expon = normalize_by_smallest_exponent(intsdf['enthalpies'])
             fig2 = px.scatter(intsdf, x="temps", y="enthalpies")
-            fig2.update_traces(marker=dict(color=list(color_dict.values()), size=10))
-            fig2.update_layout(showlegend=False, autosize=False,margin=dict(l=5, r=5, t=5, b=5),height = 400, width = 500,
-                               xaxis_title='Temperature / ºC',
-                               yaxis_title='∆H / mJ',)
+            fig2.update_traces(marker=dict(color=list(color_dict.values()), size=100))
+            superscripts = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
+
+            exp_text = str(expon).translate(superscripts)
             fig2.update_xaxes(
+                title_text='Temperature / ºC',
                 showline=True,
-                ticks='outside',
+                ticks='inside',
                 tickcolor='black',
                 mirror = 'all',
-                minor=dict(ticklen=2))
+                minor=dict(ticklen=2, ticks='inside'))
             fig2.update_yaxes(
-                # tickformat=".1e",        # scientific notation
+                title_text = f"ΔH / 10{exp_text} mJ",
+                tickformat="%d",        # scientific notation
                 exponentformat="power",  # shows as 10^n instead of e notation
                 showexponent="all",       # or "first" for cleaner look
                 showgrid = False,
                 showline=True,
-                ticks='outside',
+                ticks='inside',
                 tickcolor='black',
                 mirror = 'all',
-                minor=dict(ticklen=2))
+                minor=dict(ticklen=2, ticks='inside'))
+            fig2.update_layout(showlegend=False, autosize=False, margin=dict(l=10, r=10, t=10, b=10),height = 400, width = 500,
+                paper_bgcolor="rgba(0,0,0,0)",  # outside the axes
+                plot_bgcolor="rgba(0,0,0,0)",    # inside the axes
+                xaxis=dict(
+                    title=dict(
+                        font=dict(size=18, color="black")
+                    ),
+                    tickfont=dict(size=16, color="black")
+                ),
+                yaxis=dict(
+                    title=dict(
+                        font=dict(size=18, color="black")
+                    ),
+                    tickfont=dict(size=16, color="black")
+                )
+            )
             # ax2.plot(temps[i], ints[i][1], "o", color = color)
             yaxis_range = [
                 min(min(big_data[Ta][0]["Heat Flow"]), min(big_data[Ta][1]["Heat Flow"]))
@@ -619,98 +676,98 @@ def annealings():
                 np.abs(max(max(big_data[Ta][0]["Heat Flow"]), max(big_data[Ta][1]["Heat Flow"])))
                 * 1.01,
             ]
-        if mode == "NORMALIZE":
-            #   Set plotting limits
-            lower_y, upper_y = -0.1, 0.4
-            yaxis_range = [
-                min(
-                    min(big_data[temps[-1]][0]["Heat Flow"]),
-                    min(big_data[temps[-1]][1]["Heat Flow"]),
-                )
-                * 0.98,
-                max(
-                    max(big_data[temps[-1]][0]["Heat Flow"]),
-                    max(big_data[temps[-1]][1]["Heat Flow"]),
-                )
-                * 1.01,
-            ]
-            with ctr_panel:
-                norm_lims = st.slider(
-                    "norm limits",
-                    min_value=big_data[temps[-1]][1][eje_x].min(),
-                    max_value=big_data[temps[-1]][1][eje_x].max(),
-                    value=norm_lims_default,
-                    key="norm_lims_key",
-                    step=(
-                        big_data[temps[-1]][1][eje_x].max()
-                        - big_data[temps[-1]][1][eje_x].min()
-                    )
-                    / 100.0,
-                    format = '%.4f'
-                )
-            fig.add_trace(
-                go.Scatter(
-                    x=big_data[temps[-1]][1][eje_x],
-                    y=big_data[temps[-1]][1]["Heat Flow"],
-                    mode="lines",
-                )
-            )
-            for i in [0, 1]:
-                fig.add_vline(x=norm_lims[i], line_color="blue", line_dash="dash")
-            filtered_series = big_data[temps[-1]][1][eje_x][
-                (big_data[temps[-1]][1][eje_x] >= norm_lims[0]) &
-                (big_data[temps[-1]][1][eje_x] <= norm_lims[1])
-            ]
-            start_index = big_data[temps[-1]][1][eje_x].index[0]
-            norm_indices = filtered_series.index 
-            #st.write(big_data[temps[-1]][1][eje_x].index)
-            try:
-                m = (
-                    big_data[temps[-1]][1]["Heat Flow"][norm_indices.max()]
-                    - big_data[temps[-1]][1]["Heat Flow"][norm_indices.min()]
-                ) / (
-                    (
-                        big_data[temps[-1]][1][eje_x][norm_indices.max()]
-                        - big_data[temps[-1]][1][eje_x][norm_indices.min()]
-                    )
-                )
-                b = (
-                    big_data[temps[-1]][1]["Heat Flow"][norm_indices.min()]
-                    - m * big_data[temps[-1]][1][eje_x][norm_indices.min()]
-                )
-                norm_ref = (
-                    b
-                    + m
-                    * big_data[temps[-1]][1]["t"][norm_indices.min() - start_index: norm_indices.max() - start_index]
-                )
-                norm_value = np.trapezoid(
-                    big_data[temps[-1]][1]["Heat Flow"][
-                        norm_indices.min() - start_index : norm_indices.max() - start_index
-                    ]
-                    - norm_ref,
-                    big_data[temps[-1]][0]["t"][norm_indices.min() - start_index : norm_indices.max() - start_index],
-                )
-                if eje_x == 't':
-                    fig.add_trace(
-                        go.Scatter(
-                            x=big_data[temps[-1]][1]["t"][norm_indices.min() - start_index : norm_indices.max() - start_index],
-                            y=norm_ref,
-                            mode="lines",
-                            )
-                        )
-                cmap = plt.get_cmap("Blues")
-                colors = np.linspace(0.3, 1, len(temps))
-                for i in range(len(temps)):
-                    color = cmap(colors[i])
-                    ints[i].append(str(rgb2hex(color)))
-                intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies", "cols"])
-                intsdf["enthalpies"] = intsdf["enthalpies"] / norm_value
-                fig2 = px.scatter(intsdf, x="temps", y="enthalpies")
-                fig2.update_traces(marker=dict(color=intsdf["cols"]))
-                fig2.update_layout(showlegend=False)
-                fig2.update_layout(yaxis_range=[-0.1, 0.4])
-            except KeyError:
-                st.write("set Tm limits")
+        # if mode == "NORMALIZE":
+        #     #   Set plotting limits
+        #     lower_y, upper_y = -0.1, 0.4
+        #     yaxis_range = [
+        #         min(
+        #             min(big_data[temps[-1]][0]["Heat Flow"]),
+        #             min(big_data[temps[-1]][1]["Heat Flow"]),
+        #         )
+        #         * 0.98,
+        #         max(
+        #             max(big_data[temps[-1]][0]["Heat Flow"]),
+        #             max(big_data[temps[-1]][1]["Heat Flow"]),
+        #         )
+        #         * 1.01,
+        #     ]
+        #     with ctr_panel:
+        #         norm_lims = st.slider(
+        #             "norm limits",
+        #             min_value=big_data[temps[-1]][1][eje_x].min(),
+        #             max_value=big_data[temps[-1]][1][eje_x].max(),
+        #             value=norm_lims_default,
+        #             key="norm_lims_key",
+        #             step=(
+        #                 big_data[temps[-1]][1][eje_x].max()
+        #                 - big_data[temps[-1]][1][eje_x].min()
+        #             )
+        #             / 100.0,
+        #             format = '%.4f'
+        #         )
+        #     fig.add_trace(
+        #         go.Scatter(
+        #             x=big_data[temps[-1]][1][eje_x],
+        #             y=big_data[temps[-1]][1]["Heat Flow"],
+        #             mode="lines",
+        #         )
+        #     )
+        #     for i in [0, 1]:
+        #         fig.add_vline(x=norm_lims[i], line_color="blue", line_dash="dash")
+        #     filtered_series = big_data[temps[-1]][1][eje_x][
+        #         (big_data[temps[-1]][1][eje_x] >= norm_lims[0]) &
+        #         (big_data[temps[-1]][1][eje_x] <= norm_lims[1])
+        #     ]
+        #     start_index = big_data[temps[-1]][1][eje_x].index[0]
+        #     norm_indices = filtered_series.index 
+        #     #st.write(big_data[temps[-1]][1][eje_x].index)
+        #     try:
+        #         m = (
+        #             big_data[temps[-1]][1]["Heat Flow"][norm_indices.max()]
+        #             - big_data[temps[-1]][1]["Heat Flow"][norm_indices.min()]
+        #         ) / (
+        #             (
+        #                 big_data[temps[-1]][1][eje_x][norm_indices.max()]
+        #                 - big_data[temps[-1]][1][eje_x][norm_indices.min()]
+        #             )
+        #         )
+        #         b = (
+        #             big_data[temps[-1]][1]["Heat Flow"][norm_indices.min()]
+        #             - m * big_data[temps[-1]][1][eje_x][norm_indices.min()]
+        #         )
+        #         norm_ref = (
+        #             b
+        #             + m
+        #             * big_data[temps[-1]][1]["t"][norm_indices.min() - start_index: norm_indices.max() - start_index]
+        #         )
+        #         norm_value = np.trapezoid(
+        #             big_data[temps[-1]][1]["Heat Flow"][
+        #                 norm_indices.min() - start_index : norm_indices.max() - start_index
+        #             ]
+        #             - norm_ref,
+        #             big_data[temps[-1]][0]["t"][norm_indices.min() - start_index : norm_indices.max() - start_index],
+        #         )
+        #         if eje_x == 't':
+        #             fig.add_trace(
+        #                 go.Scatter(
+        #                     x=big_data[temps[-1]][1]["t"][norm_indices.min() - start_index : norm_indices.max() - start_index],
+        #                     y=norm_ref,
+        #                     mode="lines",
+        #                     )
+        #                 )
+        #         cmap = plt.get_cmap("Blues")
+        #         colors = np.linspace(0.3, 1, len(temps))
+        #         for i in range(len(temps)):
+        #             color = cmap(colors[i])
+        #             ints[i].append(str(rgb2hex(color)))
+        #         intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies", "cols"])
+        #         intsdf["enthalpies"] = intsdf["enthalpies"] / norm_value
+        #         fig2 = px.scatter(intsdf, x="temps", y="enthalpies")
+        #         fig2.update_traces(marker=dict(color=intsdf["cols"]))
+        #         fig2.update_layout(showlegend=False)
+        #         fig2.update_layout(yaxis_range=[-0.1, 0.4])
+        #     except KeyError:
+        #         st.write("set Tm limits")
         if mode == "FULL":
             #   Code for MAIN plot with all the curves
             #   Define the margin using the previously defined margin_step by multiplying the step times
@@ -894,7 +951,7 @@ def annealings():
             for n, i in enumerate(temps):
                 # color_list = [main_color, ref_color]
                 fill_type = ["tonexty", None] if not show_full_dif else ['tonexty']
-                text = ["", f'{i} ºC'] if not show_full_dif else [f'{i} ºC']
+                text = ["", f'{int(i)} ºC'] if not show_full_dif else [f'{i} ºC']
                 width = [2, 1.5]
                 x_max = st.session_state["regs_" + str(i)][1]
                 x_min = st.session_state["regs_" + str(i)][0]
@@ -914,7 +971,7 @@ def annealings():
                         )
                         fig.add_annotation(
                             x=big_data[i][j][eje_x].iloc[-1]
-                            * 1.1,  # x position of the last point
+                            * 1.13,  # x position of the last point
                             y=big_data[i][j]["Heat Flow"].iloc[
                                 -1
                             ],  # y position of the last point
@@ -924,7 +981,7 @@ def annealings():
                             ax=20,
                             ay=-20,  # Adjust the position of the annotation
                             font=dict(
-                                size=15, color=line_c
+                                size=16, color=color_dict[i], family = 'Arial'
                             ),  # Customize the appearance of the text
                         )
                     for j in [1, 0]:
@@ -955,7 +1012,7 @@ def annealings():
                     )
                     fig.add_annotation(
                         x=dif_df[f'{eje_x}_{i}'].iloc[-1]
-                        * 1.1,  # x position of the last point
+                        * 1.13,  # x position of the last point
                         y=baseline,  # y position of the last point
                         text=text[0],  # The text you want to display
                         showarrow=False,  # Optionally show an arrow pointing to the last point
@@ -963,7 +1020,7 @@ def annealings():
                         ax=20,
                         ay=-20,  # Adjust the position of the annotation
                         font=dict(
-                            size=15, color=line_c
+                            size=16, color=line_c, family = 'Arial'
                         ),  # Customize the appearance of the text
                     )
 
@@ -997,9 +1054,9 @@ def annealings():
                 fig.update_xaxes(
                                 showline=True,
                                 # mirror = 'all',
-                                ticks='outside',
+                                ticks='inside',
                                 tickcolor='black',
-                                minor=dict(ticklen=2))
+                                minor=dict(ticklen=2, ticks='inside'))
                 
                 if toggle_grid:
                     fig.update_xaxes(
@@ -1007,7 +1064,6 @@ def annealings():
                         gridcolor="#C7C7C7",
                         griddash='dash',
                         minor_griddash='dash',
-
                     )
 
         if mode != "FULL":
@@ -1015,9 +1071,9 @@ def annealings():
             fig.update_traces(textposition="middle right")
             fig.update_xaxes(
                             showline=True,
-                            ticks='outside',
+                            ticks='inside',
                             tickcolor='black',
-                            minor=dict(ticklen=2))
+                            minor=dict(ticklen=2, ticks='inside'))
             with inte:
                 fig2.update_traces(marker=dict(color=list(color_dict.values()), size=10))
                 fig2.update_layout(showlegend=False)
@@ -1030,7 +1086,7 @@ def annealings():
                                         'width': 450,
                                         'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
                                     }})
-                _, dwl_ent, _ = st.columns([0.7, 1, 0.7])
+                _, dwl_ent, _ = st.columns([.7, 1, 0.2])
                 result_string = "\n".join(
                     f"{row['temps']}\t{row['enthalpies']}"
                     for index, row in intsdf.iterrows()
@@ -1042,28 +1098,44 @@ def annealings():
                                     file_name=ent_filename,
                                     mime="text/csv")
         #   Show main graph
-        xaxis_range = [load_begin * 0.98, load_fin * 1.05]
+        xaxis_range = [np.sign(load_begin) * np.abs(load_begin) * 1.05, load_fin * 1.05]
         # print(dif_df[f'dif_{temps[-1]}'].iloc[0])
         sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
         fig1_h = 580 if mode == 'FULL' else 580
         if eje_x != 't':
             fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",  # outside the axes
+                plot_bgcolor="rgba(0,0,0,0)",    # inside the axes
                 autosize=True,
                 showlegend=False,
                 height=fig1_h,
                 margin=dict(l=5, r=5, t=0, b=5),
-                xaxis=dict(visible=True),
+
                 yaxis=dict(visible=False, showline=True, mirror ='all'),
                 xaxis_title='Temperature / ºC',
+                xaxis=dict(visible = True,
+                    title=dict(
+                        font=dict(size=18, color="black", family='Arial')
+                    ),
+                    tickfont=dict(size=16, color="black")
+                ),
+
             )
         else:
                     fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",  # outside the axes
+                plot_bgcolor="rgba(0,0,0,0)",    # inside the axes
                 autosize=False,
                 showlegend=False,
                 height=fig1_h,
                 margin=dict(l=5, r=5, t=5, b=5),
-                xaxis=dict(visible=True),
-                yaxis=dict(visible=False),
+                yaxis=dict(visible=False, showline=True, mirror ='all'),
+                xaxis=dict(visible = True,
+                    title=dict(
+                        font=dict(size=18, color="black", family='Arial')
+                    ),
+                    tickfont=dict(size=16, color="black")
+                ),
                 xaxis_title='Time / s',
             )
         with graf:
@@ -1078,10 +1150,13 @@ def annealings():
                     'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
                 }})#width = 'container', **{"config": config})
     except IndexError as e:
-        with graf:
-
-            st.markdown('<p class="big-font">Upload Files</p>', unsafe_allow_html=True)
-            
+        _, col, _ = st.columns(3)
+        with col:
+            st.write('IndexError: Likely bad Data :.(')
+    except KeyboardInterrupt as e:
+        pass
+        # with inte:
+        # st.write('Please Input data and confirm temperature ranges')
     except UnboundLocalError as e:
             # st.write('UnboundLocal', e)
             pass
