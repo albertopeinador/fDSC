@@ -128,7 +128,7 @@ def annealings():
     #       and one last one for the integrals plot and some adicional controls
     
 
-    ctr_panel, temps_load = st.columns([3, 7.5])
+    ctr_panel, temps_load = st.columns([1, 2])
 
     #   Set some of the controls from the first column. load_cutoff is position of first data point to load,
     #       margin_step is a percent of separation between curves, int_dif_th is threshold for integration,
@@ -142,7 +142,7 @@ def annealings():
                 save_name = st.session_state['chip_name'] + 'save_state.json'
             else:
                 save_name = 'unknown_save_state.json'
-            _, save, _ = st.columns([1,3,1])
+            _, save, _ = st.columns([.7,1,.3])
             files, load = st.columns(2)
             with save:
                 st.download_button(
@@ -302,7 +302,7 @@ def annealings():
                 raise KeyboardInterrupt
         
         with temps_load:
-            graf, inte = st.columns([3, 3.5])
+            graf, inte = st.columns([3, 3])
         if "selected_key" not in st.session_state:
             st.session_state.selected_key = temps[0]
         #   Initialize list to store integral results
@@ -321,7 +321,7 @@ def annealings():
             color = mcolors.to_hex(color)
             color_dict[v] = color
         with ctr_panel:
-            _, col, _ = st.columns ([1,3,1])
+            _, col, _ = st.columns ([3,3.5,3])
             with col:
                 mode = st.radio("mode", ["FULL", "MODIFY"], horizontal=True, label_visibility="collapsed")
         if mode == 'FULL':
@@ -629,12 +629,10 @@ def annealings():
             #     color = cmap(colors[i])
             #     ints[i].append(str(rgb2hex(color)))
             intsdf = pd.DataFrame(ints, columns=["temps", "enthalpies"])#, "cols"])
-            intsdf['enthalpies'], expon = normalize_by_smallest_exponent(intsdf['enthalpies'])
-            fig2 = px.scatter(intsdf, x="temps", y="enthalpies")
-            fig2.update_traces(marker=dict(color=list(color_dict.values()), size=100))
-            superscripts = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
+            intsdf['sci_enths'], expon = normalize_by_smallest_exponent(intsdf['enthalpies'])
+            fig2 = px.scatter(intsdf, x="temps", y="sci_enths")
+            fig2.update_traces(marker=dict(color=list(color_dict.values()), size=150))
 
-            exp_text = str(expon).translate(superscripts)
             fig2.update_xaxes(
                 title_text='Temperature / °C',
                 showline=True,
@@ -655,21 +653,21 @@ def annealings():
                 tickcolor='black',
                 mirror = 'all',
                 minor=dict(ticklen=2, ticks='inside'))
-            fig2.update_layout(showlegend=False, autosize=False, margin=dict(l=10, r=10, t=10, b=10),height = 400, width = 500,
+            fig2.update_layout(showlegend=False, autosize=False, margin=dict(l=10, r=10, t=10, b=10),height = 430, width = 450,
                 paper_bgcolor="rgba(0,0,0,0)",  # outside the axes
                 plot_bgcolor="rgba(0,0,0,0)",    # inside the axes
                 xaxis=dict(
                     title=dict(
-                        font=dict(size=18, color="black", family = 'Arial')
+                        font=dict(size=20, color="black", family = 'Arial')
                     ),
-                    tickfont=dict(size=16, color="black"),
+                    tickfont=dict(size=18, color="black"),
                    
                 ),
                 yaxis=dict(
                     title=dict(
-                        font=dict(size=18, color="black", family = 'Arial')
+                        font=dict(size=20, color="black", family = 'Arial')
                     ),
-                    tickfont=dict(size=16, color="black")
+                    tickfont=dict(size=18, color="black")
                 )
             )
             # ax2.plot(temps[i], ints[i][1], "o", color = color)
@@ -974,7 +972,7 @@ def annealings():
                         )
                         fig.add_annotation(
                             x=big_data[i][j][eje_x].iloc[-1]
-                            * 1.13,  # x position of the last point
+                            * 1.15,  # x position of the last point
                             y=big_data[i][j]["Heat Flow"].iloc[
                                 -1
                             ],  # y position of the last point
@@ -984,7 +982,7 @@ def annealings():
                             ax=20,
                             ay=-20,  # Adjust the position of the annotation
                             font=dict(
-                                size=16, color=color_dict[i], family = 'Arial'
+                                size=18, color=color_dict[i], family = 'Arial'
                             ),  # Customize the appearance of the text
                         )
                     for j in [1, 0]:
@@ -1015,7 +1013,7 @@ def annealings():
                     )
                     fig.add_annotation(
                         x=dif_df[f'{eje_x}_{i}'].iloc[-1]
-                        * 1.13,  # x position of the last point
+                        * 1.15,  # x position of the last point
                         y=baseline,  # y position of the last point
                         text=text[0],  # The text you want to display
                         showarrow=False,  # Optionally show an arrow pointing to the last point
@@ -1023,7 +1021,7 @@ def annealings():
                         ax=20,
                         ay=-20,  # Adjust the position of the annotation
                         font=dict(
-                            size=16, color=line_c, family = 'Arial'
+                            size=18, color=line_c, family = 'Arial'
                         ),  # Customize the appearance of the text
                     )
 
@@ -1080,49 +1078,51 @@ def annealings():
                             tickcolor='black',
                             minor=dict(ticklen=2, ticks='inside'))
             with inte:
-                fig2.update_traces(marker=dict(color=list(color_dict.values()), size=10))
+                fig2.update_traces(marker=dict(color=list(color_dict.values()), size=13))
                 fig2.update_layout(showlegend=False)
-                st.plotly_chart(fig2,  config={
-                    'responsive':True,
-                    'toImageButtonOptions': {
-                                        'format': 'png', # one of png, svg, jpeg, webp
-                                        'filename': f'{chip_name}_enthalpies',
-                                        'height': 430,
-                                        'width': 450,
-                                        'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
-                                    }})
-                _, dwl_ent, _ = st.columns([.7, 1, 0.2])
-                result_string = "\n".join(
-                    f"{row['temps']}\t{row['enthalpies']}"
-                    for index, row in intsdf.iterrows()
-                )
-                ent_filename = f'{chip_name}enthalpies_normalized.csv' if mode == 'NORMALIZE' else f'{chip_name}enthalpies.csv'
-                with dwl_ent:
-                    st.download_button(label= "download enthalpies",
-                                    data = result_string,
-                                    file_name=ent_filename,
-                                    mime="text/csv")
+                _, cent, _ = st.columns ([.1, 5, .1])
+                with cent:
+                    st.plotly_chart(fig2, width='content' ,config={
+                        'responsive':False,
+                        'toImageButtonOptions': {
+                                            'format': 'png', # one of png, svg, jpeg, webp
+                                            'filename': f'{chip_name}_enthalpies',
+                                            'height': 515,
+                                            'width': 512,
+                                            'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
+                                        }})
+                    _, dwl_ent, _ = st.columns([.7, 1, 0.2])
+                    result_string = "\n".join(
+                        f"{row['temps']}\t{row['enthalpies']}"
+                        for index, row in intsdf.iterrows()
+                    )
+                    ent_filename = f'{chip_name}enthalpies_normalized.csv' if mode == 'NORMALIZE' else f'{chip_name}enthalpies.csv'
+                    with dwl_ent:
+                        st.download_button(label= "download enthalpies",
+                                        data = result_string,
+                                        file_name=ent_filename,
+                                        mime="text/csv")
         #   Show main graph
         xaxis_range = [np.sign(load_begin) * np.abs(load_begin) * 1.05, load_fin * 1.05]
         # print(dif_df[f'dif_{temps[-1]}'].iloc[0])
         sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
-        fig1_h = 580 if mode == 'FULL' else 580
+        fig1_h = 660 if mode == 'FULL' else 660
         if eje_x != 't':
             fig.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",  # outside the axes
                 plot_bgcolor="rgba(0,0,0,0)",    # inside the axes
-                autosize=True,
+                autosize=False,
                 showlegend=False,
                 height=fig1_h,
                 margin=dict(l=5, r=5, t=0, b=5),
-
+                width = 400,
                 yaxis=dict(visible=False, showline=True, mirror ='all'),
                 xaxis_title='Temperature / °C',
                 xaxis=dict(visible = True,
                     title=dict(
-                        font=dict(size=18, color="black", family='Arial')
+                        font=dict(size=20, color="black", family='Arial')
                     ),
-                    tickfont=dict(size=16, color="black")
+                    tickfont=dict(size=18, color="black")
                 ),
 
             )
@@ -1133,27 +1133,30 @@ def annealings():
                 autosize=False,
                 showlegend=False,
                 height=fig1_h,
+                width = 400,
                 margin=dict(l=5, r=5, t=5, b=5),
                 yaxis=dict(visible=False, showline=True, mirror ='all'),
                 xaxis=dict(visible = True,
                     title=dict(
-                        font=dict(size=18, color="black", family='Arial')
+                        font=dict(size=20, color="black", family='Arial')
                     ),
-                    tickfont=dict(size=16, color="black")
+                    tickfont=dict(size=18, color="black")
                 ),
                 xaxis_title='Time / s',
             )
         with graf:
             figname = f'{chip_name}full_data' if mode =='FULL' else f'{chip_name}{Ta}_data'
-            st.plotly_chart(fig, config={
-                'responsive':False,
-                'toImageButtonOptions': {
-                    'format': 'png', # one of png, svg, jpeg, webp
-                    'filename': figname,
-                    'height': 750,
-                    'width': 450,
-                    'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
-                }})#width = 'container', **{"config": config})
+            _, cent, _ = st.columns ([.5, 5, .1])
+            with cent:
+                st.plotly_chart(fig, width = 'content', config={
+                    'responsive':False,
+                    'toImageButtonOptions': {
+                        'format': 'png', # one of png, svg, jpeg, webp
+                        'filename': figname,
+                        'height': 750,
+                        'width': 450,
+                        'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
+                    }})#width = 'container', **{"config": config})
     except IndexError as e:
         _, col, _ = st.columns(3)
         with col:
