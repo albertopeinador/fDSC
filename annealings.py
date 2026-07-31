@@ -381,23 +381,51 @@ def annealings():
                 Ta = st.selectbox(
                     "Select Ta to modify", [i for i in temps], key="selected_key"
                 )
+            if 'current_Ta' not in st.session_state:
+                st.session_state['current_Ta'] = Ta
+            if 'Ta_change' not in st.session_state:
+                st.session_state['Ta_change'] = False
+
+
+            if Ta != st.session_state['current_Ta']:
+                st.session_state['Ta_change'] = True
+                st.session_state['current_Ta'] = Ta
+            else:
+                st.session_state['Ta_change'] = False
+
+
             for i in temps:
                 if f"new_delta_{i}" not in st.session_state:
                     st.session_state[f"new_delta_{i}"] = 0.
+                    
+                   
                 if f"delta_{i}" not in st.session_state:
                     st.session_state[f"delta_{i}"] = 0.
+            
             if f'has_changed_{Ta}' not in st.session_state:
                 st.session_state[f'has_changed_{Ta}'] = True
+                
             if st.session_state[f"new_delta_{Ta}"] != 0.:
                 st.session_state[f"delta_{Ta}"] = st.session_state[f"new_delta_{Ta}"]
                 st.session_state[f'has_changed_{Ta}'] = False
-            elif st.session_state[f'has_changed_{Ta}']:
+                st.session_state[f'load_{i}'] = True
+            elif st.session_state['Ta_change']:
+                st.session_state[f"new_delta_{Ta}"] = st.session_state[f"delta_{Ta}"]
+                
+
+            elif not st.session_state['Ta_change'] and st.session_state[f"delta_{Ta}"] != st.session_state[f"new_delta_{Ta}"]:
                 st.session_state[f"delta_{Ta}"] = st.session_state[f"new_delta_{Ta}"]
+
+
+            # else:
+            #     st.write(st.session_state[f"new_delta_{Ta}"] != st.session_state[f"new_delta_{Ta}"],
+            #              st.session_state[f"delta_{Ta}"], st.session_state[f"new_delta_{Ta}"])
+            # st.write(st.session_state[f'load_{Ta}'])
             with ctr_panel:
                 current_delta = st.slider(
                     f"Set the delta of Ta = {Ta}",
-                    min_value=-1.0,
-                    max_value=1.0,
+                    min_value=-.5,
+                    max_value=.5,
                     key=f"new_delta_{Ta}",
                     value=st.session_state[f"delta_{Ta}"],
                     step = .01
@@ -517,7 +545,22 @@ def annealings():
                         line = dict(color = line_c, width=width[i]),
                     )
                 )
-                
+                if i==0:
+                    fig.add_annotation(
+                        x=big_data[int(Ta)][i][eje_x].iloc[-1]
+                        * 1.15,  # x position of the last point
+                        y=big_data[int(Ta)][i]["Heat Flow"].iloc[
+                            -1
+                        ],  # y position of the last point
+                        text=f'{Ta} °C',  # The text you want to display
+                        showarrow=False,  # Optionally show an arrow pointing to the last point
+                        arrowhead=2,  # Customize the arrowhead
+                        ax=20,
+                        ay=-20,  # Adjust the position of the annotation
+                        font=dict(
+                            size=18, color=line_c, family = 'Arial'
+                        ),  # Customize the appearance of the text
+                    )
                 #   Plot integration limits
                 fig.add_vline(
                     x=st.session_state["regs_" + str(Ta)][i],
@@ -952,7 +995,7 @@ def annealings():
             for n, i in enumerate(temps):
                 # color_list = [main_color, ref_color]
                 fill_type = ["tonexty", None] if not show_full_dif else ['tonexty']
-                text = ["", f'{int(i)} ºC'] if not show_full_dif else [f'{i} ºC']
+                text = ["", f'{int(i)} °C'] if not show_full_dif else [f'{i} ºC']
                 width = [2, 1.5]
                 x_max = st.session_state["regs_" + str(i)][1]
                 x_min = st.session_state["regs_" + str(i)][0]
@@ -1053,6 +1096,7 @@ def annealings():
                 #   Plot the labels on each curve
                 fig.update_traces(textposition="middle right")
                 fig.update_xaxes(
+
                                 showline=True,
                                 linecolor = 'black',
                                 # mirror = 'all',
@@ -1077,6 +1121,7 @@ def annealings():
                             ticks='inside',
                             tickcolor='black',
                             minor=dict(ticklen=2, ticks='inside'))
+
             with inte:
                 fig2.update_traces(marker=dict(color=list(color_dict.values()), size=13))
                 fig2.update_layout(showlegend=False)
@@ -1087,8 +1132,8 @@ def annealings():
                         'toImageButtonOptions': {
                                             'format': 'png', # one of png, svg, jpeg, webp
                                             'filename': f'{chip_name}_enthalpies',
-                                            'height': 515,
-                                            'width': 512,
+                                            'height': 525,
+                                            'width': 520,
                                             'scale': 5 # Multiply title/legend/axis/canvas sizes by this factor
                                         }})
                     _, dwl_ent, _ = st.columns([.7, 1, 0.2])
@@ -1106,7 +1151,7 @@ def annealings():
         xaxis_range = [np.sign(load_begin) * np.abs(load_begin) * 1.05, load_fin * 1.05]
         # print(dif_df[f'dif_{temps[-1]}'].iloc[0])
         sc.add_scalebar(fig, xaxis_range, yaxis_range, scale_factor=scalebar_scale)
-        fig1_h = 660 if mode == 'FULL' else 660
+        fig1_h = 660
         if eje_x != 't':
             fig.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",  # outside the axes
@@ -1114,9 +1159,9 @@ def annealings():
                 autosize=False,
                 showlegend=False,
                 height=fig1_h,
-                margin=dict(l=5, r=5, t=0, b=5),
+                margin=dict(l=5, r=5, t=5, b=5),
                 width = 400,
-                yaxis=dict(visible=False, showline=True, mirror ='all'),
+                yaxis=dict(visible=False, showline=False, mirror ='all'),
                 xaxis_title='Temperature / °C',
                 xaxis=dict(visible = True,
                     title=dict(
@@ -1124,7 +1169,6 @@ def annealings():
                     ),
                     tickfont=dict(size=18, color="black")
                 ),
-
             )
         else:
                     fig.update_layout(
