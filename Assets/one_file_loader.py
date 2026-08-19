@@ -57,7 +57,7 @@ def find_temps(filename, n_temps):
             st.session_state.closed_bubble = True
     if 'closable' not in st.session_state:
         st.session_state['closable'] = True
-    pattern = r'from\D*(\d+)\D+(\d+)'
+    pattern = r'from[^0-9-]*(-?\d+)[^0-9-]+(-?\d+)'
     m = re.search(pattern, filename, re.IGNORECASE)
     st.session_state['show_bubble'] = True
     if m:
