@@ -276,7 +276,7 @@ def annealings():
             chip_name, n_temps, segments = ofl.segmentation(files)
             with temps_load:
                 temps = ofl.find_temps(files[0].name, n_temps)
-            big_data = ofl.get_big_data(segments, temps, eje_x, load_begin, load_fin)
+            big_data = ofl.get_big_data(segments, temps, eje_x, load_begin, load_fin, ctr_panel)
 
         if 'chip_name' in st.session_state:
             if st.session_state['chip_name'] != chip_name:
@@ -349,13 +349,15 @@ def annealings():
             regs_label = "regs_" + str(i)
             if regs_label not in st.session_state or st.session_state["x_change_check"] != eje_x:
                 #   Find auto-limits for integration
-                
-                left, right = fai.find_int_region(
-                    big_data[i],
-                    int_dif_th
-                    * (big_data[i][0]["Heat Flow"] - big_data[i][1]["Heat Flow"]).max(),
-                    "Heat Flow",
-                )
+                try:
+                    left, right = fai.find_int_region(
+                        big_data[i],
+                        int_dif_th
+                        * (big_data[i][0]["Heat Flow"] - big_data[i][1]["Heat Flow"]).max(),
+                        "Heat Flow",
+                    )
+                except:
+                    st.write(big_data[i])
                 try:
                     st.session_state["regs_" + str(i)] = [
                         big_data[i][0][eje_x][left],

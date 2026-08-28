@@ -4,6 +4,7 @@ from io import StringIO
 import re
 import pandas as pd
 import numpy as np
+# import warnings
 
 
 
@@ -258,10 +259,18 @@ def segmentation(file):
 
 
 
-def get_big_data(segments, temps, eje_x, t_s, t_end):
+def get_big_data(segments, temps, eje_x, t_s, t_end, column):
     big_data = {}
-    if len(temps) != (len(list(segments.keys())))/2:
+    if len(temps)*2 + 1 == len(list(segments.keys())):
+        with column:
+            st.warning('One extra segment was found. Ignoring first segment.')
+        del segments[list(segments.keys())[-1]]
+        # st.write(segments)
+    elif len(temps) != (len(list(segments.keys())))/2:
+        st.write('Number of temperatures: ', temps)
+        st.write('Number of segments: ', len(list(segments.keys())))
         raise KeyError('temps and segments don\'t match')
+ 
     for i, temp in enumerate(reversed(temps)):
         ref_df = pd.read_csv(StringIO(segments[2*i]), sep='\\s+', dtype=float, names = ['Index', 't', 'Ts', 'Tr', 'Heat Flow'])
         ann_df = pd.read_csv(StringIO(segments[2*i+1]), sep='\\s+', dtype=float, names = ['Index', 't', 'Ts', 'Tr', 'Heat Flow'])
