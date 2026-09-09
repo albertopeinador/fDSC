@@ -466,6 +466,7 @@ def annealings():
                     smooth_dif = st.checkbox("Smooth dif")
                 if mode == 'MODIFY':
                     dif = big_data[int(Ta)][0]["Heat Flow"] - big_data[int(Ta)][1]["Heat Flow"]
+                    # st.write(dif)
                 #   Difference plot controls in two columns (30% width for scale and 70% for position)
                 scale, delta = st.columns([0.3, 0.7])
                 if show_dif:
@@ -479,6 +480,18 @@ def annealings():
                             value=0.9,
                             key="dif_delta_key",
                         )
+                    raw_dif_string = "\n".join(
+                        f"{index},{row}"
+                        for index, row in zip(big_data[int(Ta)][0][eje_x], dif)
+                    )
+                    
+                    raw_dif_filename = f'{chip_name}_{Ta}_dif.csv'
+
+                    st.download_button(label= "download raw diff",
+                                        data = raw_dif_string,
+                                        file_name=raw_dif_filename,
+                                        mime="text/csv")
+                    
                 if smooth_dif:
                     with scale:
                         smooth_poly = st.number_input("Polynomial order", value=2)
